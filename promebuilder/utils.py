@@ -51,12 +51,10 @@ def _readfiles(names, default=None):
 
 def gen_metadata(name, description, email, url="http://www.prometeia.com", keywords=None, packages=None,
                  entry_points=None, package_data=None, data_files=None, zip_safe=False):
-    version, buildnum, channel = gen_ver_build(
-        _readfiles(VERSIONFILE),
-        _readfiles(BRANCHFILE, ''),
-        int(_readfiles(BUILDNUMFILES, '0')))
-    print('Building version "%s" build "%d" for channel "%s"' % (version, buildnum, channel or None))
-
+    branch = _readfiles(BRANCHFILE, '')
+    version, buildnum, channel = gen_ver_build(_readfiles(VERSIONFILE), branch, int(_readfiles(BUILDNUMFILES, '0')))
+    print('Building version "%s" build "%d" from branch "%s" for channel "%s"' % (
+        version, buildnum, branch, channel or ''))
     with open(CHANNELFILE, 'w') as channelfile:
         print("Writeing channel '%s' on %s" % (channel, os.path.abspath(CHANNELFILE)))
         channelfile.write(channel)

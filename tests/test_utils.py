@@ -7,4 +7,4 @@ def test_gen_metadata():
     assert mtd["description"] == "descrizione"
     assert mtd["license"] == "Proprietary"
     with open('version') as verfile:
-        assert mtd["version"] == verfile.read().strip() + '.dev0'
+        assert mtd["version"].startswith(verfile.read().strip())
