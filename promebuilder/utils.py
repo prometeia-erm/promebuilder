@@ -61,7 +61,7 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
 
     if 'bdist_conda' in sys.argv:
         print("bdist_conda mode: requirements from file become setup requires")
-        requires = _readfiles(REQUIREMENTSFILE).splitlines()
+        requires = _readfiles(REQUIREMENTSFILE, default="").splitlines()
     else:
         # Quando si installa in sviluppo, tanto al setup quanto all'esecuzione del wrapper viene verificato
         # che i package indicati siano effettivamente presenti. I package sono però gli effettivi moduli,
