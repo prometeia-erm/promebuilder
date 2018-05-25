@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+pylint = "==1.8.*"
+pytest = "==3.5.*"
+pytest-runner = "==4.2.*"
+
+[requires]
+python_version = "2.7"
