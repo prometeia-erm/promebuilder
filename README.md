@@ -1,6 +1,6 @@
 # PromeBuilder
 
-PromeBuilder is a package to provide standard build and distribution workflow for Prometeia's products.
+PromeBuilder is a package to provide standard build and distribution [workflow for Prometeia's](docs/workflow.md) products.
 The product by itself is builded and distributed using his services.
 
     python setup.py pytest
