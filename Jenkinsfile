@@ -67,6 +67,11 @@ def builder(envlabel, condaenvb="base") {
           condashellcmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
         }
       }
+      stage('Convert/Upload 32bit') {
+        if (!isUnix()) {
+          condashellcmd("conda convert " + readFile('packagename') + " -p win-32 && anaconda upload win-32\\* --label " + readFile('channel') + " && del win-32\* /Q")
+        }
+      }
       stage('TearDown') {
         deleteDir()
       }
