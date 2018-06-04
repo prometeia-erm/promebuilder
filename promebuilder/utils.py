@@ -13,14 +13,14 @@ CHANNELFILE = 'channel'
 VALIDVER = re.compile(r'^(\d+)\.(\d+)\.(\d+)$')
 
 
-def gen_ver_build(rawversion, branch, build):
+def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
     """Returns <version>, <buildnum>, <channel>"""
     if not VALIDVER.match(rawversion):
         return rawversion, build, ''
     if not branch:
         return rawversion + '.dev0', int(time.time() - 1514764800), ''
     if branch == 'master':
-        return rawversion, 0, 'main'
+        return rawversion, masterbuild, masterlabel
     if branch == 'develop':
         return rawversion + '.dev2', build, 'develop'
     if branch.startswith('release/'):
@@ -50,9 +50,11 @@ def _readfiles(names, default=None):
 
 
 def gen_metadata(name, description, email, url="http://www.prometeia.com", keywords=None, packages=None,
-                 entry_points=None, package_data=None, data_files=None, zip_safe=False):
+                 entry_points=None, package_data=None, data_files=None, zip_safe=False,
+                 masterlabel='main', masterbuild=0):
     branch = _readfiles(BRANCHFILE, '')
-    version, buildnum, channel = gen_ver_build(_readfiles(VERSIONFILE), branch, int(_readfiles(BUILDNUMFILES, '0')))
+    version, buildnum, channel = gen_ver_build(_readfiles(VERSIONFILE), branch, int(_readfiles(BUILDNUMFILES, '0')),
+                                               masterlabel, masterbuild)
     print('Building version "%s" build "%d" from branch "%s" for channel "%s"' % (
         version, buildnum, branch, channel or ''))
     with open(CHANNELFILE, 'w') as channelfile:
