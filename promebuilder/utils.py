@@ -19,14 +19,14 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         return rawversion, build, ''
     if not branch:
         return rawversion + '.dev0', int(time.time() - 1514764800), ''
-    if branch == 'master':
+    if branch == 'master' or  branch.startswith('support/'):
         return rawversion, masterbuild, masterlabel
     if branch == 'develop':
         return rawversion + '.dev2', build, 'develop'
     if branch.startswith('release/'):
-        return rawversion + '.b1', build, 'release'
+        return rawversion + '.rc1', build, 'release'
     if branch.startswith('hotfix/'):
-        return rawversion + '.b2', build, 'release'
+        return rawversion + '.rc2', build, 'release'
     return rawversion + '.dev1', build, ''
 
 
