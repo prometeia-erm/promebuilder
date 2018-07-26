@@ -87,7 +87,7 @@ def builder(envlabel, condaenvb="base") {
         }
       }
       stage('TearDown') {
-        condashellcmd("conda env remove -y -n build_${CONDAENV}", condaenvb)
+        condashellcmd("conda env remove -y -n ${CONDAENV}", condaenvb)
         deleteDir()
       }
     }
