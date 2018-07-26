@@ -4,7 +4,7 @@ pipeline {
       CONDAENV = calc_conda_env()
   }
   stages {
-    stage('SetUp') {
+    stage('Bootstrap') {
       steps {
         writeFile file: 'buildnum', text: "${env.BUILD_NUMBER}"
         writeFile file: 'commit', text: "${env.GIT_COMMIT}"
@@ -36,30 +36,43 @@ def calc_conda_env() {
 def builder(envlabel, condaenvb="base") {
   node(envlabel) {
     pipeline {
-      stage('Unstash') {
+      stage('SetUp') {
+        echo "Setup on ${envlabel}, conda environment ${CONDAENV}"
         unstash "source"
+        condashellcmd("conda create -y -n ${CONDAENV} python=2.7", condaenvb)
+        condashellcmd("conda install -y --file build-requirements.txt", CONDAENV)
+        echo "Checking package and channel names"
+        condashellcmd("python setup.py --name", CONDAENV)
+        if (readFile('channel')) {
+          echo "Adding to environment channel " + readFile('channel')
+          condashellcmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), CONDAENV)
+        } else {
+          echo "WARNING: Build without channel!"
+        }
+        condashellcmd("conda config --show channels", CONDAENV)
+        echo "Installing requiremets on conda environment ${CONDAENV}"
+        condashellcmd("conda install -y --file requirements.txt", CONDAENV)
       }
       stage('Test') {
-        condashellcmd("conda create -y -n test_${CONDAENV} python=2.7", condaenvb)
-        condashellcmd("conda install -y --file requirements.txt", "test_${CONDAENV}")
-        condashellcmd("python setup.py pytest", "test_${CONDAENV}")
-        condashellcmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
+        condashellcmd("python setup.py pytest", CONDAENV)
       }
-     stage('Build') {
-        echo "Building on ${envlabel}, conda environment ${condaenvb}"
-        unstash "source"
+      stage('Build') {
         script {
-          writeFile file: 'buildoutput', text: condashellcmd("python setup.py bdist_conda", condaenvb, true).trim()
+          writeFile file: 'buildoutput', text: condashellcmd("python setup.py bdist_conda", CONDAENV, true).trim()
           writeFile file: 'packagename', text: readFile('buildoutput').split(" ")[-1]
         }
         echo "BUILD OUTPUT: \n\n ================ \n" + readFile('buildoutput') + "\n ================ \n"
         echo "PACKAGENAME: " + readFile('packagename')
       }
       stage('Install') {
-        echo "Installing on indipendent test environment"
+        echo "Creating indipendent test environment test_${CONDAENV}"
         condashellcmd("conda create -y -n ${CONDAENV} python=2.7", condaenvb)
-        condashellcmd("conda install -y " + readFile('packagename'), CONDAENV)
-        condashellcmd("conda env remove -y -n ${CONDAENV}", condaenvb)
+        if (readFile('channel')) {
+          condashellcmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
+        }
+        echo "Installing package on test environment test_${CONDAENV}"
+        condashellcmd("conda install -y " + readFile('packagename'), "final_${CONDAENV}")
+        condashellcmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
       }
       stage('Upload') {
         if (readFile('channel')) {
@@ -67,13 +80,14 @@ def builder(envlabel, condaenvb="base") {
           condashellcmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
         }
       }
-      stage('ConvertUpload32bit') {
+     stage('ConvertUpload32bit') {
         if (!isUnix()) {
           echo "Converting and Uploading package for win32"
           condashellcmd("conda convert " + readFile('packagename') + " -p win-32 && anaconda upload win-32\\* --label " + readFile('channel') + " && del win-32\\* /Q", condaenvb)
         }
       }
       stage('TearDown') {
+        condashellcmd("conda env remove -y -n build_${CONDAENV}", condaenvb)
         deleteDir()
       }
     }

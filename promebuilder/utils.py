@@ -22,7 +22,9 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
     if branch == 'master' or  branch.startswith('support/'):
         return rawversion, masterbuild, masterlabel
     if branch == 'develop':
-        return rawversion + '.dev2', build, 'develop'
+        return rawversion + '.dev3', build, 'develop'
+    if branch.startswith('develop_'):
+        return rawversion + '.dev2', build, branch
     if branch.startswith('release/'):
         return rawversion + '.rc1', build, 'release'
     if branch.startswith('hotfix/'):
