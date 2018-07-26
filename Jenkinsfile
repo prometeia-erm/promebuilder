@@ -66,7 +66,7 @@ def builder(envlabel, condaenvb="base") {
       }
       stage('Install') {
         echo "Creating indipendent test environment test_${CONDAENV}"
-        condashellcmd("conda create -y -n ${CONDAENV} python=2.7", condaenvb)
+        condashellcmd("conda create -y -n test_${CONDAENV} python=2.7", condaenvb)
         if (readFile('channel')) {
           condashellcmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
         }
