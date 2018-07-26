@@ -71,7 +71,7 @@ def builder(envlabel, condaenvb="base") {
           condashellcmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
         }
         echo "Installing package on test environment test_${CONDAENV}"
-        condashellcmd("conda install -y " + readFile('packagename'), "final_${CONDAENV}")
+        condashellcmd("conda install -y " + readFile('packagename'), "test_${CONDAENV}")
         condashellcmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
       }
       stage('Upload') {
