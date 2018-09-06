@@ -58,7 +58,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         }
       }
       stage('TearDown') {
-        archiveArtifacts htmlcov/**
+        archiveArtifacts('htmlcov/**')
         condaShellCmd("conda env remove -y -n ${CONDAENV}", condaenvb)
         deleteDir()
       }
