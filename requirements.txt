@@ -2,5 +2,6 @@ conda==4.5.*
 conda-build==3.*
 pylint==1.8.*
 pytest==3.5.*
+pytest-cov==2.*
 pytest-runner==4.2.*
 conda-verify==3.*
