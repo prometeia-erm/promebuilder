@@ -23,7 +23,8 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "INFO: Installing requiremets on conda environment ${CONDAENV}"
         condaShellCmd("conda install -y --file requirements.txt", CONDAENV)
       }
-      stage('Test') {
+      stage('UnitTests') {
+        condaShellCmd("python setup.py develop", CONDAENV)
         condaShellCmd("pytest", CONDAENV)
       }
       stage('Build') {
