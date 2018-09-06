@@ -28,6 +28,10 @@ pipeline {
             }
         }
     }
+    stage("CleanUp") {
+        steps {
+            deleteDir()
+        }
+    }
   }
 }
-
