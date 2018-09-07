@@ -4,6 +4,8 @@ import os
 import re
 import time
 import sys
+import warnings
+from setuptools.extern.packaging.version import Version, InvalidVersion
 
 VERSIONFILE = 'version'
 BRANCHFILE = 'branch'
@@ -15,21 +17,29 @@ VALIDVER = re.compile(r'^(\d+)\.(\d+)\.(\d+)$')
 
 def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
     """Returns <version>, <buildnum>, <channel>"""
-    if not VALIDVER.match(rawversion):
-        return rawversion, build, ''
-    if not branch:
-        return rawversion + '.dev0', int(time.time() - 1514764800), ''
-    if branch == 'master' or  branch.startswith('support/'):
-        return rawversion, masterbuild, masterlabel
-    if branch == 'develop':
-        return rawversion + '.dev3', build, 'develop'
-    if branch.startswith('develop_'):
-        return rawversion + '.dev2', build, branch
-    if branch.startswith('release/'):
-        return rawversion + '.rc1', build, 'release'
-    if branch.startswith('hotfix/'):
-        return rawversion + '.rc2', build, 'release'
-    return rawversion + '.dev1', build, ''
+    def calc():
+        if not VALIDVER.match(rawversion):
+            return rawversion, build, ''
+        if not branch:
+            return rawversion + '.dev0', int(time.time() - 1514764800), ''
+        if branch == 'master' or branch.startswith('support/'):
+            return rawversion, masterbuild, masterlabel
+        if branch == 'develop':
+            return rawversion + '.dev3', build, 'develop'
+        if branch.startswith('develop_'):
+            return rawversion + '.dev2', build, branch
+        if branch.startswith('release/'):
+            return rawversion + '.rc1', build, 'release'
+        if branch.startswith('hotfix/'):
+            return rawversion + '.rc2', build, 'release'
+    tver, tbuild, tlab = calc()
+    # Version normalization
+    try:
+        parsedver = Version(tver)
+        tver = str(parsedver)
+    except InvalidVersion:
+        warnings.warn("Invalid version %s" % tver)
+    return tver, tbuild, tlab
 
 
 def _readfiles(names, default=None):
