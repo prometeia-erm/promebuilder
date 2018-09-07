@@ -10,7 +10,9 @@ pipeline {
       steps {
         writeFile file: 'buildnum', text: "${env.BUILD_NUMBER}"
         writeFile file: 'commit', text: "${env.GIT_COMMIT}"
-        writeFile file: 'branch', text: "${env.GIT_BRANCH}"
+        // env.GIT_BRANCH is wrong when the included library is the same project is builded!
+        // writeFile file: 'branch', text: "${env.GIT_BRANCH}"
+        writeFile file: 'branch', text: bat(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
         stash(name: "source", useDefaultExcludes: true)
       }
     }
@@ -35,3 +37,6 @@ pipeline {
     }
   }
 }
+
+
+
