@@ -2,6 +2,13 @@
 
 pipeline {
   agent any
+  parameters {
+    booleanParam(
+      name: 'skip_tests',
+      defaultValue: false,
+      description: 'Skip all tests'
+    )
+  }
   environment {
       CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
   }

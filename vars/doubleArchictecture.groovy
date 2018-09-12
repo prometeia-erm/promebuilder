@@ -24,8 +24,10 @@ def call(envlabel, condaenvb="base", convert32=false) {
         condaShellCmd("conda install -y --file requirements.txt", CONDAENV)
       }
       stage('UnitTests') {
-        condaShellCmd("python setup.py develop", CONDAENV)
-        condaShellCmd("pytest", CONDAENV)
+        if (! params?.skip_tests) {
+          condaShellCmd("python setup.py develop", CONDAENV)
+          condaShellCmd("pytest", CONDAENV)
+        }
       }
       stage('Build') {
         script {
@@ -36,14 +38,16 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "PACKAGENAME: " + readFile('packagename')
       }
       stage('Install') {
-        echo "Creating indipendent test environment test_${CONDAENV}"
-        condaShellCmd("conda create -y -n test_${CONDAENV} python=2.7", condaenvb)
-        if (readFile('channel')) {
-          condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
+        if (! params?.skip_tests) {
+          echo "Creating indipendent test environment test_${CONDAENV}"
+          condaShellCmd("conda create -y -n test_${CONDAENV} python=2.7", condaenvb)
+          if (readFile('channel')) {
+            condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
+          }
+          echo "Installing package on test environment test_${CONDAENV}"
+          condaShellCmd("conda install -y " + readFile('packagename'), "test_${CONDAENV}")
+          condaShellCmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
         }
-        echo "Installing package on test environment test_${CONDAENV}"
-        condaShellCmd("conda install -y " + readFile('packagename'), "test_${CONDAENV}")
-        condaShellCmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
       }
       stage('Upload') {
         if (readFile('channel')) {
