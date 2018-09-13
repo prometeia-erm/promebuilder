@@ -54,17 +54,28 @@ def call(envlabel, condaenvb="base", convert32=false) {
       stage('Upload') {
         if (readFile('channel')) {
           echo "Uploading " + readFile('packagename') + " to label " + readFile('channel')
-          condaShellCmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
+          if (! params?.force_upload) {
+            condaShellCmd("anaconda upload " + readFile('packagename') + " --force --label " + readFile('channel'), condaenvb)
+          } else {
+            condaShellCmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
+          }
         }
       }
       stage('ConvertUpload32bit') {
         if (convert32 && !isUnix() && readFile('channel')) {
           echo "Converting and Uploading package for win32"
-          condaShellCmd("conda convert " + readFile('packagename') + " -p win-32 && anaconda upload win-32\\* --label " + readFile('channel') + " && del win-32\\* /Q", condaenvb)
+          condaShellCmd("conda convert " + readFile('packagename') + " -p win-32", condaenvb)
+          if (! params?.force_upload) {
+            condaShellCmd("anaconda upload win-32\\* --force --label " + readFile('channel'), condaenvb)
+          } else {
+            condaShellCmd("anaconda upload win-32\\* --label " + readFile('channel'), condaenvb)
+          }
         }
       }
-      stage('TearDown') {
-        archiveArtifacts('htmlcov/**')
+      stage('ArtifactTearDown') {
+        if (! params?.skip_tests) {
+          archiveArtifacts('htmlcov/**')
+        }
         condaShellCmd("conda env remove -y -n ${CONDAENV}", condaenvb)
         deleteDir()
       }

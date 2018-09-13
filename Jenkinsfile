@@ -8,6 +8,11 @@ pipeline {
       defaultValue: false,
       description: 'Skip all tests'
     )
+    booleanParam(
+      name: 'force_upload',
+      defaultValue: false,
+      description: 'Force Anaconda upload, overwriting the same build.'
+    )
   }
   environment {
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
