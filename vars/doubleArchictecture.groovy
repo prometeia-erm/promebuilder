@@ -9,7 +9,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "Setup on ${envlabel}, conda environment ${CONDAENV}"
         unstash "source"
         condaShellCmd("conda create -y -n ${CONDAENV} python=2.7", condaenvb)
-        condaShellCmd("conda install -y --file build-requirements.txt", CONDAENV)
+        condaShellCmd("conda install -y --file build-requirements.txt --force", CONDAENV)
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", CONDAENV)
         if (readFile('channel')) {
@@ -25,6 +25,8 @@ def call(envlabel, condaenvb="base", convert32=false) {
       }
       stage('UnitTests') {
         if (! params?.skip_tests) {
+          // Forced reinstall to avoid annoying wrong setuptools usage
+          condaShellCmd("conda update setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
           condaShellCmd("pytest", CONDAENV)
         }
