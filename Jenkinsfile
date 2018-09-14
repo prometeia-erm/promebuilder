@@ -8,9 +8,14 @@ pipeline {
       defaultValue: false,
       description: 'Skip all tests'
     )
+    booleanParam(
+      name: 'force_upload',
+      defaultValue: false,
+      description: 'Force Anaconda upload, overwriting the same build.'
+    )
   }
   environment {
-      CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
+    CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
   }
   stages {
     stage('Bootstrap') {
@@ -24,26 +29,28 @@ pipeline {
       }
     }
     stage("MultiBuild") {
-        parallel {
-            stage("Build on Linux") {
-                steps {
-                    doubleArchictecture('linux')
-                }
-            }
-            stage("Build on Windows") {
-                steps {
-                    doubleArchictecture('windows', 'base', true)
-                }
-            }
+      parallel {
+        stage("Build on Linux") {
+          steps {
+            doubleArchictecture('linux')
+          }
         }
+        stage("Build on Windows") {
+          steps {
+            doubleArchictecture('windows', 'base', true)
+          }
+        }
+      }
     }
-    stage("CleanUp") {
-        steps {
-            deleteDir()
-        }
+  }
+  post {
+    success {
+      deleteDir()
+    }
+    failure {
+      mail to: 'pytho_support@prometeia.com ',
+        subject: "PROMEBUILDER: Failed Pipeline ${currentBuild.fullDisplayName}",
+        body: "Loot at ${env.BUILD_URL}"
     }
   }
 }
-
-
-
