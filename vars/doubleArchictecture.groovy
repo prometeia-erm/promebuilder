@@ -9,7 +9,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "Setup on ${envlabel}, conda environment ${CONDAENV}"
         unstash "source"
         condaShellCmd("conda create -y -n ${CONDAENV} python=2.7", condaenvb)
-        condaShellCmd("conda install -y --file build-requirements.txt", CONDAENV)
+        condaShellCmd("conda install -y --file build-requirements.txt --force", CONDAENV)
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", CONDAENV)
         if (readFile('channel')) {
@@ -24,8 +24,12 @@ def call(envlabel, condaenvb="base", convert32=false) {
         condaShellCmd("conda install -y --file requirements.txt", CONDAENV)
       }
       stage('UnitTests') {
-        condaShellCmd("python setup.py develop", CONDAENV)
-        condaShellCmd("pytest", CONDAENV)
+        if (! params?.skip_tests) {
+          // Forced reinstall to avoid annoying wrong setuptools usage
+          condaShellCmd("conda update setuptools --force", CONDAENV)
+          condaShellCmd("python setup.py develop", CONDAENV)
+          condaShellCmd("pytest", CONDAENV)
+        }
       }
       stage('Build') {
         script {
@@ -36,29 +40,42 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "PACKAGENAME: " + readFile('packagename')
       }
       stage('Install') {
-        echo "Creating indipendent test environment test_${CONDAENV}"
-        condaShellCmd("conda create -y -n test_${CONDAENV} python=2.7", condaenvb)
-        if (readFile('channel')) {
-          condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
+        if (! params?.skip_tests) {
+          echo "Creating indipendent test environment test_${CONDAENV}"
+          condaShellCmd("conda create -y -n test_${CONDAENV} python=2.7", condaenvb)
+          if (readFile('channel')) {
+            condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
+          }
+          echo "Installing package on test environment test_${CONDAENV}"
+          condaShellCmd("conda install -y " + readFile('packagename'), "test_${CONDAENV}")
+          condaShellCmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
         }
-        echo "Installing package on test environment test_${CONDAENV}"
-        condaShellCmd("conda install -y " + readFile('packagename'), "test_${CONDAENV}")
-        condaShellCmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
       }
       stage('Upload') {
         if (readFile('channel')) {
           echo "Uploading " + readFile('packagename') + " to label " + readFile('channel')
-          condaShellCmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
+          if (! params?.force_upload) {
+            condaShellCmd("anaconda upload " + readFile('packagename') + " --force --label " + readFile('channel'), condaenvb)
+          } else {
+            condaShellCmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
+          }
         }
       }
       stage('ConvertUpload32bit') {
         if (convert32 && !isUnix() && readFile('channel')) {
           echo "Converting and Uploading package for win32"
-          condaShellCmd("conda convert " + readFile('packagename') + " -p win-32 && anaconda upload win-32\\* --label " + readFile('channel') + " && del win-32\\* /Q", condaenvb)
+          condaShellCmd("conda convert " + readFile('packagename') + " -p win-32", condaenvb)
+          if (! params?.force_upload) {
+            condaShellCmd("anaconda upload win-32\\* --force --label " + readFile('channel'), condaenvb)
+          } else {
+            condaShellCmd("anaconda upload win-32\\* --label " + readFile('channel'), condaenvb)
+          }
         }
       }
-      stage('TearDown') {
-        archiveArtifacts('htmlcov/**')
+      stage('ArtifactTearDown') {
+        if (! params?.skip_tests) {
+          archiveArtifacts('htmlcov/**')
+        }
         condaShellCmd("conda env remove -y -n ${CONDAENV}", condaenvb)
         deleteDir()
       }
