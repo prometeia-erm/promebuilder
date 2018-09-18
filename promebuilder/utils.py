@@ -34,6 +34,7 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
             return rawversion + 'rc1', build, 'release'
         if branch.startswith('hotfix/'):
             return rawversion + 'rc2', build, 'release'
+        return rawversion + 'a0.dev0', build, ''
     tver, tbuild, tlab = calc()
     # Version normalization
     try:
