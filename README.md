@@ -9,3 +9,8 @@ The product by itself is builded and distributed using his services.
 ## Installation with pip
 
     pip install git+https://github.com/prometeia/promebuilder.git#egg=promebuilder
+    
+## SonarQube
+
+    pytest
+    sonar-scanner -D sonar.projectVersion=$(cat version)
