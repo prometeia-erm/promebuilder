@@ -9,7 +9,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "Setup on ${envlabel}, conda environment ${CONDAENV}"
         unstash "source"
         condaShellCmd("conda create -y -n ${CONDAENV} python=2.7", condaenvb)
-        condaShellCmd("conda install -y --file build-requirements.txt --force", CONDAENV)
+        condaShellCmd("conda install -q -y --file build-requirements.txt --force", CONDAENV)
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", CONDAENV)
         if (readFile('channel')) {
@@ -21,14 +21,19 @@ def call(envlabel, condaenvb="base", convert32=false) {
         }
         condaShellCmd("conda config --show channels", CONDAENV)
         echo "INFO: Installing requiremets on conda environment ${CONDAENV}"
-        condaShellCmd("conda install -y --file requirements.txt", CONDAENV)
+        condaShellCmd("conda install -q -y --file requirements.txt", CONDAENV)
       }
       stage('UnitTests') {
         if (! params?.skip_tests) {
           // Forced reinstall to avoid annoying wrong setuptools usage
-          condaShellCmd("conda update setuptools --force", CONDAENV)
+          condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
           condaShellCmd("pytest", CONDAENV)
+        }
+      }
+      stage('SonarScanner') {
+        if (! params?.skip_tests) {
+          condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
         }
       }
       stage('Build') {
@@ -42,12 +47,12 @@ def call(envlabel, condaenvb="base", convert32=false) {
       stage('Install') {
         if (! params?.skip_tests) {
           echo "Creating indipendent test environment test_${CONDAENV}"
-          condaShellCmd("conda create -y -n test_${CONDAENV} python=2.7", condaenvb)
+          condaShellCmd("conda create -q -y -n test_${CONDAENV} python=2.7", condaenvb)
           if (readFile('channel')) {
             condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
           }
           echo "Installing package on test environment test_${CONDAENV}"
-          condaShellCmd("conda install -y " + readFile('packagename'), "test_${CONDAENV}")
+          condaShellCmd("conda install -q -y " + readFile('packagename'), "test_${CONDAENV}")
           condaShellCmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
         }
       }
