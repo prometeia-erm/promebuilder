@@ -31,6 +31,11 @@ def call(envlabel, condaenvb="base", convert32=false) {
           condaShellCmd("pytest", CONDAENV)
         }
       }
+      stage('SonarScanner') {
+        if (! params?.skip_tests) {
+          condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
+        }
+      }
       stage('Build') {
         script {
           writeFile file: 'buildoutput', text: condaShellCmd("python setup.py bdist_conda", CONDAENV, true).trim()

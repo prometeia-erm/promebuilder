@@ -54,12 +54,11 @@ def _readfiles(names, default=None):
                 if data:
                     return data
         except IOError:
-            print "[not found file %s]" % name
-            pass
+            print("[not found file %s]" % name)
     if default is None:
         raise IOError("Missing or empty all of the files " + ', '.join(names))
     else:
-        print "[returning default '%s']" % default
+        print("[returning default '%s']" % default)
     return default
 
 
