@@ -1,1 +1,1 @@
-from utils import gen_metadata, setup
+from .utils import gen_metadata, setup
