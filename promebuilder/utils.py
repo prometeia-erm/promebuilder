@@ -34,6 +34,7 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
             return rawversion + 'rc1', build, 'release'
         if branch.startswith('hotfix/'):
             return rawversion + 'rc2', build, 'release'
+        return rawversion + 'a0.dev0', build, ''
     tver, tbuild, tlab = calc()
     # Version normalization
     try:
@@ -54,12 +55,11 @@ def _readfiles(names, default=None):
                 if data:
                     return data
         except IOError:
-            print "[not found file %s]" % name
-            pass
+            print("[not found file %s]" % name)
     if default is None:
         raise IOError("Missing or empty all of the files " + ', '.join(names))
     else:
-        print "[returning default '%s']" % default
+        print("[returning default '%s']" % default)
     return default
 
 

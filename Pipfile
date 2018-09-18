@@ -8,8 +8,9 @@ name = "pypi"
 [packages]
 pylint = "==1.8.*"
 pytest = "==3.5.*"
-pytest-runner = "==4.2.*"
-pytest-cov = "==2.*"
+pytest-runner = "==4.2"
+pytest-cov = "==2"
+pytest-pylint = "==0.*"
 
 [requires]
 python_version = "2.7"
