@@ -45,12 +45,11 @@ pipeline {
   }
   post {
     success {
+      slackSend color: "good", message: "Builded ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
       deleteDir()
     }
     failure {
-      mail to: 'pytho_support@prometeia.com ',
-        subject: "PROMEBUILDER: Failed Pipeline ${currentBuild.fullDisplayName}",
-        body: "Loot at ${env.BUILD_URL}"
+      slackSend color: "warning", message: "Failed ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
     }
   }
 }
