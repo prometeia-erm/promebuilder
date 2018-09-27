@@ -7,6 +7,11 @@ METADATA = gen_metadata(
     email="pytho_support@prometeia.com",
     url="https://github.com/prometeia/promebuilder",
     keywords="setup build pipeline ci",
+    entry_points={
+        'console_scripts': [
+            'promescanner = promebuilder.scanner:scan_here'
+        ]
+    }
 )
 
 
