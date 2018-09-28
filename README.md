@@ -13,4 +13,4 @@ The product by itself is builded and distributed using his services.
 ## SonarQube
 
     pytest
-    sonar-scanner -D sonar.projectVersion=$(cat version)
+    sonar-scanner -Dsonar.projectVersion=$(cat version) -Dsonar.dryRun=true

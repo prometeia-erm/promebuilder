@@ -28,12 +28,16 @@ def call(envlabel, condaenvb="base", convert32=false) {
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
-          condaShellCmd("pytest", CONDAENV)
+          condaShellCmd("pytest --cache-clear", CONDAENV)
         }
       }
       stage('SonarScanner') {
         if (! params?.skip_tests) {
-          condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
+          try {
+            condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
+          } catch (err) {
+            echo "Failes sonarqube scanning"
+          }
         }
       }
       stage('Build') {

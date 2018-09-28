@@ -63,16 +63,20 @@ def _readfiles(names, default=None):
     return default
 
 
+def read_version():
+    return _readfiles(VERSIONFILE)
+
+
 def gen_metadata(name, description, email, url="http://www.prometeia.com", keywords=None, packages=None,
                  entry_points=None, package_data=None, data_files=None, zip_safe=False,
                  masterlabel='main', masterbuild=0):
     branch = _readfiles(BRANCHFILE, '')
-    version, buildnum, channel = gen_ver_build(_readfiles(VERSIONFILE), branch, int(_readfiles(BUILDNUMFILES, '0')),
+    version, buildnum, channel = gen_ver_build(read_version(), branch, int(_readfiles(BUILDNUMFILES, '0')),
                                                masterlabel, masterbuild)
     print('Building version "%s" build "%d" from branch "%s" for channel "%s"' % (
         version, buildnum, branch, channel or ''))
     with open(CHANNELFILE, 'w') as channelfile:
-        print("Writeing channel '%s' on %s" % (channel, os.path.abspath(CHANNELFILE)))
+        print("Writing channel '%s' on %s" % (channel, os.path.abspath(CHANNELFILE)))
         channelfile.write(channel)
 
     if 'bdist_conda' in sys.argv:
