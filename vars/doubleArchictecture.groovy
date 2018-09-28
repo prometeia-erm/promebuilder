@@ -33,7 +33,11 @@ def call(envlabel, condaenvb="base", convert32=false) {
       }
       stage('SonarScanner') {
         if (! params?.skip_tests) {
-          condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
+          try {
+            condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
+          } catch (err) {
+            echo err
+          }
         }
       }
       stage('Build') {
