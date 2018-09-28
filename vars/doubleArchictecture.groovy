@@ -28,7 +28,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
-          condaShellCmd("pytest", CONDAENV)
+          condaShellCmd("pytest --cache-clear", CONDAENV)
         }
       }
       stage('SonarScanner') {
