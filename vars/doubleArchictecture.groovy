@@ -36,7 +36,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
           try {
             condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
           } catch (err) {
-            echo err
+            echo "Failes sonarqube scanning"
           }
         }
       }
