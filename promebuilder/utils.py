@@ -125,4 +125,22 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
 
 
 def setup(metadata):
-    setuptools.setup(**metadata)
+    try:
+        from conda import CondaError
+    except ImportError:
+        setuptools.setup(**metadata)
+    else:
+        tnum = 3
+        while tnum:
+            tnum -= 1
+            try:
+                setuptools.setup(**metadata)
+            except CondaError as cerr:
+                if not tnum:
+                    print("-- TOO MANY CONDA ERROR--")
+                    raise
+                print("-- CONDA ERROR --")
+                print(str(cerr))
+                print("-- RETRY --")
+            else:
+                break
