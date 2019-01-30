@@ -1,6 +1,6 @@
-conda==4.5.*
-conda-build==3.16.*
-pylint==1.*
+conda==4.6.*
+conda-build==3.17.*
+pylint
 pytest==4.*
 pytest-cov==2.*
 conda-verify==3.*
