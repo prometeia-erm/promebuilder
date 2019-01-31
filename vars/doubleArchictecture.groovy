@@ -82,14 +82,9 @@ def call(envlabel, condaenvb="base", convert32=false) {
           }
         }
       }
-    }
-    post {
-        success {
-            condaCleaner(true, CONDAENV, condaenvb)
-        }
-        failure {
-            condaCleaner(! params?.keep_on_fail, CONDAENV, condaenvb)
-        }
+      stage('Teardown') {
+        condaCleaner(true, CONDAENV, condaenvb)
+      }
     }
   }
 }
