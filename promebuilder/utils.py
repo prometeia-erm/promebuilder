@@ -18,6 +18,7 @@ VALIDVER = re.compile(r'^(\d+)\.(\d+)\.(\d+)$')
 def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
     """Returns <version>, <buildnum>, <channel>"""
     def calc():
+        devn = '.dev%d' % build if build else ''
         if not VALIDVER.match(rawversion):
             return rawversion, build, ''
         if not branch:
@@ -31,9 +32,9 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         if branch.startswith('feature/'):
             return rawversion + 'a1.dev1', build, ''
         if branch.startswith('release/'):
-            return rawversion + 'rc1', build, 'release'
+            return rawversion + 'rc1' + devn, build, 'release'
         if branch.startswith('hotfix/'):
-            return rawversion + 'rc2', build, 'release'
+            return rawversion + 'rc2' + devn, build, 'release'
         return rawversion + 'a0.dev0', build, ''
     tver, tbuild, tlab = calc()
     # Version normalization
@@ -101,13 +102,26 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
         license="Proprietary",
         include_package_data=True,
         zip_safe=zip_safe,
-        classifiers=['License :: Other/Proprietary License'],
+        classifiers=['License :: Other/Proprietary License', 'Framework :: Pytest',
+                     'Intended Audience :: Financial and Insurance Industry',
+                     'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: Linux',
+                     'Programming Language :: Python :: 2.7'],
+        platforms=['Microsoft Windows, Linux'],
         install_requires=requires or [],
         package_data=package_data or {},
         entry_points=entry_points or {},
         version=version,
         data_files=data_files or []
     )
+
+    try:
+        with open("README.md", "r") as fh:
+            long_description = fh.read()
+        metadata['long_description'] = long_description
+        metadata['long_description_content_type'] = "text/markdown"
+    except OSError:
+        metadata['long_description'] = description
+        metadata['long_description_content_type'] = "text/plain"
 
     try:
         import distutils.command.bdist_conda
@@ -125,4 +139,22 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
 
 
 def setup(metadata):
-    setuptools.setup(**metadata)
+    try:
+        from conda import CondaError
+    except ImportError:
+        setuptools.setup(**metadata)
+    else:
+        tnum = 3
+        while tnum:
+            tnum -= 1
+            try:
+                setuptools.setup(**metadata)
+            except CondaError as cerr:
+                if not tnum:
+                    print("-- TOO MANY CONDA ERROR--")
+                    raise
+                print("-- CONDA ERROR --")
+                print(str(cerr))
+                print("-- RETRY --")
+            else:
+                break
