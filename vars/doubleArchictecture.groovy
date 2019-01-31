@@ -85,14 +85,10 @@ def call(envlabel, condaenvb="base", convert32=false) {
     }
     post {
         success {
-          deleteDir()
-          condaShellCmd("conda env remove -y -n ${CONDAENV}", condaenvb)
+            condaCleaner(true, CONDAENV, condaenvb)
         }
         failure {
-          if (! params?.keep_on_fail) {
-            deleteDir()
-            condaShellCmd("conda env remove -y -n ${CONDAENV}", condaenvb)
-          }
+            condaCleaner(! params?.keep_on_fail, CONDAENV, condaenvb)
         }
     }
   }

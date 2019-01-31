@@ -19,6 +19,9 @@ pipeline {
       description: 'Keep job environment on failed build.'
     )
   }
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+  }
   environment {
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
   }
@@ -49,14 +52,13 @@ pipeline {
     }
   }
   post {
-    success {
-      slackSend color: "good", message: "Builded ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
+    always {
       deleteDir()
     }
+    success {
+      slackSend color: "good", message: "Builded ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
+    }
     failure {
-      if (! params?.keep_on_fail) {
-        deleteDir()
-      }
       slackSend color: "warning", message: "Failed ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
     }
   }
