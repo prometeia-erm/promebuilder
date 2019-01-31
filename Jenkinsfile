@@ -13,6 +13,14 @@ pipeline {
       defaultValue: false,
       description: 'Force Anaconda upload, overwriting the same build.'
     )
+    booleanParam(
+      name: 'keep_on_fail',
+      defaultValue: false,
+      description: 'Keep job environment on failed build.'
+    )
+  }
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
   }
   environment {
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
@@ -44,9 +52,11 @@ pipeline {
     }
   }
   post {
+    always {
+      deleteDir()
+    }
     success {
       slackSend color: "good", message: "Builded ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
-      deleteDir()
     }
     failure {
       slackSend color: "warning", message: "Failed ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
