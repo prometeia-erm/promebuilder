@@ -29,6 +29,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
           condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
           condaShellCmd("pytest --cache-clear", CONDAENV)
+          archiveArtifacts('htmlcov/**')
         }
       }
       stage('SonarScanner') {
@@ -81,12 +82,8 @@ def call(envlabel, condaenvb="base", convert32=false) {
           }
         }
       }
-      stage('ArtifactTearDown') {
-        if (! params?.skip_tests) {
-          archiveArtifacts('htmlcov/**')
-        }
-        condaShellCmd("conda env remove -y -n ${CONDAENV}", condaenvb)
-        deleteDir()
+      stage('Teardown') {
+        condaCleaner(true, CONDAENV, condaenvb)
       }
     }
   }
