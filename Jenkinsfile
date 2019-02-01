@@ -6,7 +6,12 @@ pipeline {
     booleanParam(
       name: 'skip_tests',
       defaultValue: false,
-      description: 'Skip all tests'
+      description: 'Skip unit tests'
+    )
+    booleanParam(
+      name: 'deep_tests',
+      defaultValue: false,
+      description: 'Do deep testing (regression, install, etc..)
     )
     booleanParam(
       name: 'force_upload',
