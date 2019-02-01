@@ -33,14 +33,11 @@ def call(envlabel, condaenvb="base", convert32=false) {
         }
       }
       stage('SonarScanner') {
-        when {
-          expression { isUnix() AND NOT params?.skip_tests }
-        }
-        steps {
+        if (! params?.skip_tests && params?.deep_tests && isUnix() ) {
           try   {
             condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
           } catch (err) {
-            echo "Failes sonarqube scanning"
+            echo "Failed sonarqube scanning"
           }
         }
       }
@@ -53,8 +50,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "PACKAGENAME: " + readFile('packagename')
       }
       stage('Install') {
-        // Sostituire con l'operatore "when" -- https://jenkins.io/blog/2017/01/19/converting-conditional-to-pipeline/
-        if (! params?.skip_tests) {
+        if (params?.deep_tests) {
           echo "Creating indipendent test environment test_${CONDAENV}"
           condaShellCmd("conda create -q -y -n test_${CONDAENV} python=2.7", condaenvb)
           if (readFile('channel')) {

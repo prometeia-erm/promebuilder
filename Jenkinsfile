@@ -11,7 +11,7 @@ pipeline {
     booleanParam(
       name: 'deep_tests',
       defaultValue: false,
-      description: 'Do deep testing (regression, install, etc..)'
+      description: 'Do deep testing (regression, sonarqube, install, etc..)'
     )
     booleanParam(
       name: 'force_upload',
