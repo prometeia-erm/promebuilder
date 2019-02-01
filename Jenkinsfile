@@ -38,7 +38,10 @@ pipeline {
         // env.GIT_BRANCH is wrong when the included library is the same project is builded!
         // writeFile file: 'branch', text: "${env.GIT_BRANCH}"
         writeFile file: 'branch', text: bat(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
-        if (params?.deep_tests) {
+        if (! params?.deep_tests) {
+            echo "Quick testing MODE"
+        } else {
+            echo "Deep Test MODE"
             bat(script: "activatenrt")
         }
         stash(name: "source", useDefaultExcludes: true)
