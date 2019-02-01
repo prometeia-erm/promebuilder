@@ -9,7 +9,8 @@ METADATA = gen_metadata(
     keywords="setup build pipeline ci",
     entry_points={
         'console_scripts': [
-            'promescanner = promebuilder.scanner:scan_here'
+            'promescanner = promebuilder.scanner:scan_here',
+            'activatenrt = promebuilder.activatenrt:activate_nrt'
         ]
     }
 )
