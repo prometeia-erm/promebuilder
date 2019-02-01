@@ -20,12 +20,12 @@ def activate_nrt():
         return
     config = ConfigParser.ConfigParser()
     config.read(PYTESTINI)
-    tests = [x.strip() for x in (config.get(PYTESTSECTION, TESTPATHSKEY) or '').split(',')]
+    tests = (config.get(PYTESTSECTION, TESTPATHSKEY) or '').split('')
     if NRT_FOLDER in tests:
         print("NRT folder %s already in tests" % TESTPATHSKEY)
         return
     tests.append(NRT_FOLDER)
-    value = ', '.join(tests)
+    value = ' '.join(tests)
     config.set(PYTESTSECTION, TESTPATHSKEY, value)
     if not args.doit:
         print("Dryrun, not really written new configuration << %s = %s >>" % (TESTPATHSKEY, value))
