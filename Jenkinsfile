@@ -1,4 +1,4 @@
-@Library('promebuilder')_
+@Library('promebuilder@develop')_
 
 pipeline {
   agent any
@@ -29,6 +29,7 @@ pipeline {
   }
   environment {
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
+    DEEPTESTS = ${env.GIT_BRANCH} == 'master' || params.deep_tests
   }
   stages {
     stage('Bootstrap') {
@@ -38,12 +39,6 @@ pipeline {
         // env.GIT_BRANCH is wrong when the included library is the same project is builded!
         // writeFile file: 'branch', text: "${env.GIT_BRANCH}"
         writeFile file: 'branch', text: bat(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
-        script {
-            if (params?.deep_tests) {
-                echo "Activating NRT"
-                condaShellCmd("activatenrt --doit")
-            }
-        }
         stash(name: "source", useDefaultExcludes: true)
       }
     }
