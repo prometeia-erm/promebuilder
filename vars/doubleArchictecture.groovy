@@ -28,8 +28,12 @@ def call(envlabel, condaenvb="base", convert32=false) {
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
-          condaShellCmd("pytest --cache-clear", CONDAENV)
-          archiveArtifacts('htmlcov/**')
+          if (params?.deep_tests) {
+            condaShellCmd("pytest --cache-clear", CONDAENV)
+            archiveArtifacts('htmlcov/**')
+          } else {
+            condaShellCmd("pytest --cache-clear --no-cov", CONDAENV)
+          }
         }
       }
       stage('SonarScanner') {
