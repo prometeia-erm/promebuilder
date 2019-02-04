@@ -13,6 +13,7 @@ REQUIREMENTSFILE = 'requirements.txt'
 BUILDNUMFILES = ['buildnum', 'build_trigger_number']
 CHANNELFILE = 'channel'
 VALIDVER = re.compile(r'^(\d+)\.(\d+)\.(\d+)$')
+COVERAGEFILE = "htmlcov/index.html"
 
 
 def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
@@ -66,6 +67,15 @@ def _readfiles(names, default=None):
 
 def read_version():
     return _readfiles(VERSIONFILE)
+
+
+def has_coverage_report():
+    hascoverage = os.path.isfile(COVERAGEFILE)
+    if hascoverage:
+        print("[found a coverage report in %s]" % COVERAGEFILE)
+    else:
+        print("[no coverage was calculated]")
+    return hascoverage
 
 
 def gen_metadata(name, description, email, url="http://www.prometeia.com", keywords=None, packages=None,
@@ -126,10 +136,13 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
     try:
         import distutils.command.bdist_conda
         print("Conda distribution")
+        docondatests = has_coverage_report()
+        if not docondatests:
+            print("[skipping conda tests]")
         metadata.update(dict(
             distclass=distutils.command.bdist_conda.CondaDistribution,
-            conda_import_tests=True,
-            conda_command_tests=True,
+            conda_import_tests=docondatests,
+            conda_command_tests=docondatests,
             conda_buildnum=buildnum
         ))
     except ImportError:

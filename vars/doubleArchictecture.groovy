@@ -28,16 +28,20 @@ def call(envlabel, condaenvb="base", convert32=false) {
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
-          condaShellCmd("pytest --cache-clear", CONDAENV)
-          archiveArtifacts('htmlcov/**')
+          if (params?.deep_tests) {
+            condaShellCmd("pytest --cache-clear", CONDAENV)
+            archiveArtifacts('htmlcov/**')
+          } else {
+            condaShellCmd("pytest --cache-clear --no-cov", CONDAENV)
+          }
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests) {
-          try {
+        if (! params?.skip_tests && params?.deep_tests && isUnix() ) {
+          try   {
             condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
           } catch (err) {
-            echo "Failes sonarqube scanning"
+            echo "Failed sonarqube scanning"
           }
         }
       }
@@ -50,7 +54,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "PACKAGENAME: " + readFile('packagename')
       }
       stage('Install') {
-        if (! params?.skip_tests) {
+        if (params?.deep_tests) {
           echo "Creating indipendent test environment test_${CONDAENV}"
           condaShellCmd("conda create -q -y -n test_${CONDAENV} python=2.7", condaenvb)
           if (readFile('channel')) {
