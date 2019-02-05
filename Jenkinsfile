@@ -24,8 +24,12 @@ pipeline {
       description: 'Keep job environment on failed build.'
     )
   }
+  triggers {
+    pollSCM('H/5 8-20 * * 1-5')
+  }
   options {
     buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+    disableConcurrentBuilds()
   }
   environment {
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
