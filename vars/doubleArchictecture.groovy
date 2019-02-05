@@ -71,14 +71,14 @@ def call(envlabel, condaenvb="base", convert32=false) {
       }
       stage('Upload') {
         if (readFile('channel')) {
-          writeFile file: 'labels', text: " --label" + readFile('channel')
+          writeFile file: 'labels', text: " --label " + readFile('channel')
           if (fileExists("htmlcov/index.html") ) {
             writeFile file: 'labels', text: " --label deeptested" + readFile('labels')
           }
-          if (! params?.force_upload) {
+          if (params?.force_upload) {
             writeFile file: 'labels', text: " --force " + readFile('labels')
           }
-          echo "Uploading " + readFile('packagename') + " with options" + readFile('labels')
+          echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
           condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
         }
       }
