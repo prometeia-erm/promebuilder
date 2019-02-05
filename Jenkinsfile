@@ -1,4 +1,4 @@
-@Library('promebuilder@develop')_
+@Library('promebuilder')_
 
 pipeline {
   agent any
