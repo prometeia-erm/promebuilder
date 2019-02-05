@@ -22,7 +22,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         condaShellCmd("conda config --show channels", CONDAENV)
         echo "INFO: Installing requiremets on conda environment ${CONDAENV}"
         condaShellCmd("conda install -q -y --file requirements.txt", CONDAENV)
-        if (DEEPTESTS) {
+        if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
             echo "Activating NRT"
             condaShellCmd("activatenrt --doit", CONDAENV)
         }
@@ -32,7 +32,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
-          if (DEEPTESTS) {
+          if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
             condaShellCmd("pytest --cache-clear", CONDAENV)
             archiveArtifacts('htmlcov/**')
           } else {
@@ -41,7 +41,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests && DEEPTESTS && isUnix() ) {
+        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() ) {
           try   {
             condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
           } catch (err) {
@@ -58,7 +58,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "PACKAGENAME: " + readFile('packagename')
       }
       stage('Install') {
-        if (DEEPTESTS) {
+        if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
           echo "Creating indipendent test environment test_${CONDAENV}"
           condaShellCmd("conda create -q -y -n test_${CONDAENV} python=2.7", condaenvb)
           if (readFile('channel')) {

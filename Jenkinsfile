@@ -29,7 +29,6 @@ pipeline {
   }
   environment {
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
-    DEEPTESTS = ${env.GIT_BRANCH} == 'master' || params.deep_tests
   }
   stages {
     stage('Bootstrap') {
