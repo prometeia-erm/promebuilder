@@ -22,13 +22,17 @@ def call(envlabel, condaenvb="base", convert32=false) {
         condaShellCmd("conda config --show channels", CONDAENV)
         echo "INFO: Installing requiremets on conda environment ${CONDAENV}"
         condaShellCmd("conda install -q -y --file requirements.txt", CONDAENV)
+        if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
+            echo "Activating NRT"
+            condaShellCmd("activatenrt --doit", CONDAENV)
+        }
       }
       stage('UnitTests') {
         if (! params?.skip_tests) {
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", CONDAENV)
           condaShellCmd("python setup.py develop", CONDAENV)
-          if (params?.deep_tests) {
+          if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
             condaShellCmd("pytest --cache-clear", CONDAENV)
             archiveArtifacts('htmlcov/**')
           } else {
@@ -37,7 +41,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests && params?.deep_tests && isUnix() ) {
+        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() ) {
           try   {
             condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
           } catch (err) {
@@ -54,7 +58,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         echo "PACKAGENAME: " + readFile('packagename')
       }
       stage('Install') {
-        if (params?.deep_tests) {
+        if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
           echo "Creating indipendent test environment test_${CONDAENV}"
           condaShellCmd("conda create -q -y -n test_${CONDAENV} python=2.7", condaenvb)
           if (readFile('channel')) {
@@ -67,12 +71,15 @@ def call(envlabel, condaenvb="base", convert32=false) {
       }
       stage('Upload') {
         if (readFile('channel')) {
-          echo "Uploading " + readFile('packagename') + " to label " + readFile('channel')
-          if (! params?.force_upload) {
-            condaShellCmd("anaconda upload " + readFile('packagename') + " --force --label " + readFile('channel'), condaenvb)
-          } else {
-            condaShellCmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
+          writeFile file: 'labels', text: " --label " + readFile('channel')
+          if (fileExists("htmlcov/index.html") ) {
+            writeFile file: 'labels', text: " --label deeptested" + readFile('labels')
           }
+          if (params?.force_upload) {
+            writeFile file: 'labels', text: " --force " + readFile('labels')
+          }
+          echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
+          condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
         }
       }
       stage('ConvertUpload32bit') {

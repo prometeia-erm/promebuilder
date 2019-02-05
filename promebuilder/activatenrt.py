@@ -20,7 +20,7 @@ def activate_nrt():
         return
     config = ConfigParser.ConfigParser()
     config.read(PYTESTINI)
-    tests = (config.get(PYTESTSECTION, TESTPATHSKEY) or '').split('')
+    tests = (config.get(PYTESTSECTION, TESTPATHSKEY) or '').split()
     if NRT_FOLDER in tests:
         print("NRT folder %s already in tests" % TESTPATHSKEY)
         return
