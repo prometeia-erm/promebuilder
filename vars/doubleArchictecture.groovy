@@ -71,12 +71,15 @@ def call(envlabel, condaenvb="base", convert32=false) {
       }
       stage('Upload') {
         if (readFile('channel')) {
-          echo "Uploading " + readFile('packagename') + " to label " + readFile('channel')
-          if (! params?.force_upload) {
-            condaShellCmd("anaconda upload " + readFile('packagename') + " --force --label " + readFile('channel'), condaenvb)
-          } else {
-            condaShellCmd("anaconda upload " + readFile('packagename') + " --label " + readFile('channel'), condaenvb)
+          writeFile file: 'labels', text: " --label " + readFile('channel')
+          if (fileExists("htmlcov/index.html") ) {
+            writeFile file: 'labels', text: " --label deeptested" + readFile('labels')
           }
+          if (params?.force_upload) {
+            writeFile file: 'labels', text: " --force " + readFile('labels')
+          }
+          echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
+          condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
         }
       }
       stage('ConvertUpload32bit') {
