@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import ConfigParser
 
 COVERAGE_FILENAME = "sonar.python.coverage.reportPath"
-NRT_FOLDER = "tests-nrt"
+NRT_FOLDER = "tests_nr"
 PYTESTINI = "pytest.ini"
 PYTESTSECTION = "pytest"
 TESTPATHSKEY = "testpaths"
