@@ -24,6 +24,6 @@ def test_gen_ver_build():
     # Branch feature/XXX
     assert ('1.2.3a1.dev1', 99, '') == gen_ver_build('1.2.3', 'feature/h725', 99)
     # Branch release/XXX
-    assert ('1.2.3rc1.dev99', 99, 'release') == gen_ver_build('1.2.3', 'release/ciccio', 99)
+    assert ('1.2.3rc1.dev99', 0, 'release') == gen_ver_build('1.2.3', 'release/ciccio', 99)
     # Branch hotfix/XXX
-    assert ('1.2.3rc2.dev99', 99, 'release') == gen_ver_build('1.2.3', 'hotfix/pluto', 99)
+    assert ('1.2.3rc2.dev99', 0, 'release') == gen_ver_build('1.2.3', 'hotfix/pluto', 99)
