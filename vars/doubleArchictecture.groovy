@@ -42,7 +42,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() ) {
+        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7") {
           try   {
             condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , condaenvbuild)
           } catch (err) {
