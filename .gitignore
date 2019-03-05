@@ -124,3 +124,6 @@ linux-*/
 
 # Sonar
 .scannerwork/
+
+# ONLY ME - automatic
+requirements.txt

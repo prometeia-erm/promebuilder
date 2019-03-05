@@ -1,6 +1,6 @@
 import os
 from argparse import ArgumentParser
-import ConfigParser
+import configparser
 
 COVERAGE_FILENAME = "sonar.python.coverage.reportPath"
 NRT_FOLDER = "tests_nr"
@@ -18,7 +18,7 @@ def activate_nrt():
     if not os.path.isdir(NRT_FOLDER):
         print("Not found NRT folder %s" % NRT_FOLDER)
         return
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(PYTESTINI)
     tests = (config.get(PYTESTSECTION, TESTPATHSKEY) or '').split()
     if NRT_FOLDER in tests:

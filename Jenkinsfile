@@ -14,6 +14,11 @@ pipeline {
       description: 'Do deep testing (regression, sonarqube, install, etc..)'
     )
     booleanParam(
+      name: 'python3',
+      defaultValue: true,
+      description: 'Building also for Pytho3'
+    )
+    booleanParam(
       name: 'force_upload',
       defaultValue: false,
       description: 'Force Anaconda upload, overwriting the same build.'
@@ -29,7 +34,10 @@ pipeline {
     disableConcurrentBuilds()
   }
   environment {
-    CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}".replace('%2F','_').replace('/', '_')
+    PYVER = "2.7"
+    PYVER3 = "3.7"
+    CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY2".replace('%2F','_').replace('/', '_')
+    CONDAENV3 = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY3".replace('%2F','_').replace('/', '_')
   }
   stages {
     stage('Bootstrap') {
@@ -44,14 +52,26 @@ pipeline {
     }
     stage("MultiBuild") {
       parallel {
-        stage("Build on Linux") {
+        stage("Build on Linux - Legacy Python") {
           steps {
-            doubleArchictecture('linux')
+            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV)
           }
         }
-        stage("Build on Windows") {
+        stage("Build on Windows - Legacy Python") {
           steps {
-            doubleArchictecture('windows', 'base', true)
+            doubleArchictecture('windows', 'base', true, PYVER, CONDAENV)
+          }
+        }
+        stage("Build on Linux - Python3") {
+          when { expression { return params.python3 } }
+          steps {
+            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3)
+          }
+        }
+        stage("Build on Windows - Python3") {
+          when { expression { return params.python3 } }
+          steps {
+            doubleArchictecture('windows', 'base', true, PYVER3, CONDAENV3)
           }
         }
       }

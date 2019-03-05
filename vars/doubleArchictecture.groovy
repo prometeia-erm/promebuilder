@@ -1,49 +1,50 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false) {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV) {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
         echo "Existing conda envs"
         condaShellCmd("conda info --envs", condaenvb)
-        echo "Setup on ${envlabel}, conda environment ${CONDAENV}"
+        echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
         unstash "source"
-        condaShellCmd("conda create -y -n ${CONDAENV} python=2.7", condaenvb)
-        condaShellCmd("conda install -q -y --file build-requirements.txt --force", CONDAENV)
+        retry(3) {
+          condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver} --file build-requirements.txt", condaenvb)
+        }
         echo "Checking package and channel names"
-        condaShellCmd("python setup.py --name", CONDAENV)
+        condaShellCmd("python setup.py --name", condaenvbuild)
         if (readFile('channel')) {
           echo "Adding to environment channel " + readFile('channel')
-          condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), CONDAENV)
+          condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), condaenvbuild)
         } else {
           echo "WARNING: Build without channel, adding 'develop' as default fallback channel:"
-          condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/develop", CONDAENV)
+          condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/develop", condaenvbuild)
         }
-        condaShellCmd("conda config --show channels", CONDAENV)
-        echo "INFO: Installing requiremets on conda environment ${CONDAENV}"
-        condaShellCmd("conda install -q -y --file requirements.txt", CONDAENV)
+        condaShellCmd("conda config --show channels", condaenvbuild)
+        echo "INFO: Installing requiremets on conda environment ${condaenvbuild}"
+        condaShellCmd("conda install -q -y --file requirements.txt", condaenvbuild)
         if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
             echo "Activating NRT"
-            condaShellCmd("activatenrt --doit", CONDAENV)
+            condaShellCmd("activatenrt --doit", condaenvbuild)
         }
       }
       stage('UnitTests') {
         if (! params?.skip_tests) {
           // Forced reinstall to avoid annoying wrong setuptools usage
-          condaShellCmd("conda update -q setuptools --force", CONDAENV)
-          condaShellCmd("python setup.py develop", CONDAENV)
+          condaShellCmd("conda update -q setuptools --force", condaenvbuild)
+          condaShellCmd("python setup.py develop", condaenvbuild)
           if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
-            condaShellCmd("pytest --cache-clear", CONDAENV)
+            condaShellCmd("pytest --cache-clear", condaenvbuild)
             archiveArtifacts('htmlcov/**')
           } else {
-            condaShellCmd("pytest --cache-clear --no-cov", CONDAENV)
+            condaShellCmd("pytest --cache-clear --no-cov", condaenvbuild)
           }
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() ) {
+        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7") {
           try   {
-            condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , CONDAENV)
+            condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , condaenvbuild)
           } catch (err) {
             echo "Failed sonarqube scanning"
           }
@@ -51,7 +52,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
       }
       stage('Build') {
         script {
-          writeFile file: 'buildoutput', text: condaShellCmd("python setup.py bdist_conda", CONDAENV, true).trim()
+          writeFile file: 'buildoutput', text: condaShellCmd("python setup.py bdist_conda", condaenvbuild, true).trim()
           writeFile file: 'packagename', text: readFile('buildoutput').split(" ")[-1]
         }
         echo "BUILD OUTPUT: \n\n ================ \n" + readFile('buildoutput') + "\n ================ \n"
@@ -59,14 +60,14 @@ def call(envlabel, condaenvb="base", convert32=false) {
       }
       stage('Install') {
         if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
-          echo "Creating indipendent test environment test_${CONDAENV}"
-          condaShellCmd("conda create -q -y -n test_${CONDAENV} python=2.7", condaenvb)
+          echo "Creating indipendent test environment test_${condaenvbuild}"
+          condaShellCmd("conda create -q -y -n test_${condaenvbuild} python=${pythonver}", condaenvb)
           if (readFile('channel')) {
-            condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${CONDAENV}")
+            condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${condaenvbuild}")
           }
-          echo "Installing package on test environment test_${CONDAENV}"
-          condaShellCmd("conda install -q -y " + readFile('packagename'), "test_${CONDAENV}")
-          condaShellCmd("conda env remove -y -n test_${CONDAENV}", condaenvb)
+          echo "Installing package on test environment test_${condaenvbuild}"
+          condaShellCmd("conda install -q -y " + readFile('packagename'), "test_${condaenvbuild}")
+          condaShellCmd("conda env remove -y -n test_${condaenvbuild}", condaenvb)
         }
       }
       stage('Upload') {
@@ -79,7 +80,9 @@ def call(envlabel, condaenvb="base", convert32=false) {
             writeFile file: 'labels', text: " --force " + readFile('labels')
           }
           echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
-          condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
+          retry(3) {
+            condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
+          }
         }
       }
       stage('ConvertUpload32bit') {
@@ -94,7 +97,7 @@ def call(envlabel, condaenvb="base", convert32=false) {
         }
       }
       stage('Teardown') {
-        condaCleaner(true, CONDAENV, condaenvb)
+        condaCleaner(true, condaenvbuild, condaenvb)
       }
     }
   }
