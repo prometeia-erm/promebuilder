@@ -8,7 +8,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         condaShellCmd("conda info --envs", condaenvb)
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
         unstash "source"
-        condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver} --file build-requirements.txt", condaenvb)
+        retry(3) {
+          condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver} --file build-requirements.txt", condaenvb)
+        }
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", condaenvbuild)
         if (readFile('channel')) {
@@ -40,7 +42,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() ) {
+        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7") {
           try   {
             condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , condaenvbuild)
           } catch (err) {
@@ -78,7 +80,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             writeFile file: 'labels', text: " --force " + readFile('labels')
           }
           echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
-          condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
+          retry(3) {
+            condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
+          }
         }
       }
       stage('ConvertUpload32bit') {

@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
+from shutil import copyfile
 from promebuilder import gen_metadata, setup
+from promebuilder.utils import REQUIREMENTSFILE
+
+BUILREQFILE = 'build-requirements.txt'
+
+print("Duplicating {} into {}".format(BUILREQFILE, REQUIREMENTSFILE))
+copyfile(BUILREQFILE, REQUIREMENTSFILE)
 
 METADATA = gen_metadata(
     name="promebuilder",
