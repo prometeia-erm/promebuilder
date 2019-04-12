@@ -8,8 +8,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         condaShellCmd("conda info --envs", condaenvb)
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
         unstash "source"
+        condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver}, condaenvb)
         retry(3) {
-          condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver} --file build-requirements.txt", condaenvb)
+          condaShellCmd("conda install -q -y --file build-requirements.txt", condaenvbuild)
         }
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", condaenvbuild)
