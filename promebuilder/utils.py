@@ -14,29 +14,31 @@ BUILDNUMFILES = ['buildnum', 'build_trigger_number']
 CHANNELFILE = 'channel'
 VALIDVER = re.compile(r'^(\d+)\.(\d+)\.(\d+)$')
 COVERAGEFILE = "htmlcov/index.html"
+DYNBUILDNUM = int(time.time() - 1514764800)
 
 
 def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
     """Returns <version>, <buildnum>, <channel>"""
     def calc():
-        devn = '.dev%d' % build if build else ''
         if not VALIDVER.match(rawversion):
             return rawversion, build, ''
         if not branch:
-            return rawversion + 'a0', int(time.time() - 1514764800), ''
-        if branch == 'master' or branch.startswith('support/'):
-            return rawversion, masterbuild, masterlabel
+            return rawversion + 'a0', DYNBUILDNUM, ''
         if branch == 'develop':
-            return rawversion + 'a3', build, 'develop'
-        if branch.startswith('develop_'):
-            return rawversion + 'a2', build, branch
-        if branch.startswith('feature/'):
-            return rawversion + 'a1.dev1', build, ''
-        if branch.startswith('release/'):
-            return rawversion + 'rc1' + devn, masterbuild, 'release'
-        if branch.startswith('hotfix/'):
-            return rawversion + 'rc2' + devn, masterbuild, 'release'
-        return rawversion + 'a0.dev0', build, ''
+            return rawversion + 'a4', build or DYNBUILDNUM, 'develop'
+        try:
+            btype, bname = branch.split('/')
+        except ValueError:
+            btype, bname = '', ''
+        assert bname not in ('master', 'support', 'hotfix', 'release', 'develop')
+        if branch == 'master' or btype == 'support':
+            return rawversion, masterbuild, masterlabel
+        if build and btype in ('release', 'hotfix'):
+            return '{}rc{}'.format(rawversion, build), masterbuild, btype
+        return '{}a{}'.format(rawversion, 1 + int(bool(btype)) + int(btype == 'feature')), \
+               build or DYNBUILDNUM, \
+               bname if btype == 'develop' else ''
+
     tver, tbuild, tlab = calc()
     # Version normalization
     try:

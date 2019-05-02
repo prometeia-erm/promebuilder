@@ -8,8 +8,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         condaShellCmd("conda info --envs", condaenvb)
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
         unstash "source"
+        condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver}", condaenvb)
         retry(3) {
-          condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver} --file build-requirements.txt", condaenvb)
+          condaShellCmd("conda install --copy -q -y --file build-requirements.txt", condaenvbuild)
         }
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", condaenvbuild)
@@ -21,8 +22,10 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/develop", condaenvbuild)
         }
         condaShellCmd("conda config --show channels", condaenvbuild)
-        echo "INFO: Installing requiremets on conda environment ${condaenvbuild}"
-        condaShellCmd("conda install -q -y --file requirements.txt", condaenvbuild)
+        echo "INFO: Installing requirements on conda environment ${condaenvbuild}"
+        retry(3) {
+          condaShellCmd("conda install --copy -q -y --file requirements.txt", condaenvbuild)
+        }
         if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
             echo "Activating NRT"
             condaShellCmd("activatenrt --doit", condaenvbuild)
@@ -66,7 +69,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${condaenvbuild}")
           }
           echo "Installing package on test environment test_${condaenvbuild}"
-          condaShellCmd("conda install -q -y " + readFile('packagename'), "test_${condaenvbuild}")
+          retry(3) {
+            condaShellCmd("conda install --copy -q -y " + readFile('packagename'), "test_${condaenvbuild}")
+          }
           condaShellCmd("conda env remove -y -n test_${condaenvbuild}", condaenvb)
         }
       }
