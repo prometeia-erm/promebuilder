@@ -6,3 +6,4 @@ pytest-cov==2.*
 conda-verify==3.*
 pytest-pylint
 setuptools>=40.6
+pipenv

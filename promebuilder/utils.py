@@ -15,6 +15,7 @@ CHANNELFILE = 'channel'
 VALIDVER = re.compile(r'^(\d+)\.(\d+)\.(\d+)$')
 COVERAGEFILE = "htmlcov/index.html"
 DYNBUILDNUM = int(time.time() - 1514764800)
+LONGDESCFILE = "README.md"
 
 
 def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
@@ -127,7 +128,7 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
     )
 
     try:
-        with open("README.md", "r") as fh:
+        with open(LONGDESCFILE, "r") as fh:
             long_description = fh.read()
         metadata['long_description'] = long_description
         metadata['long_description_content_type'] = "text/markdown"
