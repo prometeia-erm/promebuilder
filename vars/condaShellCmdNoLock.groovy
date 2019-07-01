@@ -2,8 +2,8 @@
 
 def call(command, condaenv="base", returnStdout=false) {
     if (isUnix()) {
-        return sh(script: "source {$env.LINUX_CONDA_BIN}/activate ${condaenv}; ${command}", returnStdout: returnStdout)
+        return sh(script: "source ${env.CONDA_PREFIX}/bin/activate ${condaenv}; ${command}; conda deactivate", returnStdout: returnStdout)
     } else {
-        return bat(script: "{$env.WIN_CONDA_BIN}\activate ${condaenv} && ${command} && conda deactivate", returnStdout: returnStdout)
+        return bat(script: "${env.CONDA_PREFIX}\\scripts\\activate ${condaenv} && ${command} && conda deactivate", returnStdout: returnStdout)
     }
 }
