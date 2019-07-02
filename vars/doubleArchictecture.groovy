@@ -4,6 +4,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
   node(envlabel) {
     pipeline {
       stage('SetUp') {
+        echo "Working on ${env.NODE_NAME}"
         echo "Existing conda envs"
         condaShellCmd("conda info --envs", condaenvb)
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
