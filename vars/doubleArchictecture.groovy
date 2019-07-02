@@ -14,6 +14,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", condaenvbuild)
+        condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia", condaenvbuild)
         if (readFile('channel')) {
           echo "Adding to environment channel " + readFile('channel')
           condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), condaenvbuild)
