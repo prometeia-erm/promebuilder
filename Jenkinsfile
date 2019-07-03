@@ -59,7 +59,14 @@ pipeline {
         }
         stage("Build on Windows - Legacy Python") {
           steps {
-            doubleArchictecture('windows', 'base', true, PYVER, CONDAENV)
+            script {
+              try {
+                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV)
+              } catch (exc) {
+                echo 'Build failed on Windows Legacy Python'
+                currentBuild.result = 'UNSTABLE'
+              }
+            }
           }
         }
         stage("Build on Linux - Python3") {

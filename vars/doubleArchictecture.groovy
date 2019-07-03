@@ -4,6 +4,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
   node(envlabel) {
     pipeline {
       stage('SetUp') {
+        echo "Working on ${env.NODE_NAME}"
         echo "Existing conda envs"
         condaShellCmd("conda info --envs", condaenvb)
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
@@ -14,6 +15,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
         echo "Checking package and channel names"
         condaShellCmd("python setup.py --name", condaenvbuild)
+        condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia", condaenvbuild)
         if (readFile('channel')) {
           echo "Adding to environment channel " + readFile('channel')
           condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), condaenvbuild)
@@ -37,17 +39,17 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           condaShellCmd("conda update -q setuptools --force", condaenvbuild)
           condaShellCmd("python setup.py develop", condaenvbuild)
           if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
-            condaShellCmd("pytest --cache-clear", condaenvbuild)
+            condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
             archiveArtifacts('htmlcov/**')
           } else {
-            condaShellCmd("pytest --cache-clear --no-cov", condaenvbuild)
+            condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
           }
         }
       }
       stage('SonarScanner') {
         if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7") {
           try   {
-            condaShellCmd("sonar-scanner -D sonar.projectVersion=" + readFile('version') , condaenvbuild)
+            condaShellCmdNoLock("sonar-scanner -D sonar.projectVersion=" + readFile('version') , condaenvbuild)
           } catch (err) {
             echo "Failed sonarqube scanning"
           }
@@ -86,18 +88,18 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           }
           echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
           retry(3) {
-            condaShellCmd("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
+            condaShellCmdNoLock("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
           }
         }
       }
       stage('ConvertUpload32bit') {
         if (convert32 && !isUnix() && readFile('channel')) {
           echo "Converting and Uploading package for win32"
-          condaShellCmd("conda convert " + readFile('packagename') + " -p win-32", condaenvb)
+          condaShellCmdNoLock("conda convert " + readFile('packagename') + " -p win-32", condaenvb)
           if (! params?.force_upload) {
-            condaShellCmd("anaconda upload win-32\\* --force --label " + readFile('channel'), condaenvb)
+            condaShellCmdNoLock("anaconda upload win-32\\* --force --label " + readFile('channel'), condaenvb)
           } else {
-            condaShellCmd("anaconda upload win-32\\* --label " + readFile('channel'), condaenvb)
+            condaShellCmdNoLock("anaconda upload win-32\\* --label " + readFile('channel'), condaenvb)
           }
         }
       }
