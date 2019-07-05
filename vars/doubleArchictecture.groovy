@@ -38,7 +38,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", condaenvbuild)
           condaShellCmd("python setup.py develop", condaenvbuild)
-          if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
+          if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7"){
             condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
             archiveArtifacts('htmlcov/**')
           } else {
