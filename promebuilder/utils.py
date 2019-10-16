@@ -17,6 +17,16 @@ COVERAGEFILE = "htmlcov/index.html"
 DYNBUILDNUM = int(time.time() - 1514764800)
 LONGDESCFILE = "README.md"
 
+RESERVED = ('master', 'support', 'hotfix', 'release', 'develop', 'backporting', 'feature', 'test')
+
+
+def btype2index(btype):
+    orderer = [''] + list(reversed(RESERVED))
+    try:
+        return orderer.index(btype)
+    except ValueError:
+        return 0
+
 
 def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
     """Returns <version>, <buildnum>, <channel>"""
@@ -26,19 +36,20 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         if not branch:
             return rawversion + 'a0', DYNBUILDNUM, ''
         if branch == 'develop':
-            return rawversion + 'a4', build or DYNBUILDNUM, 'develop'
+            return "{}a{}".format(rawversion, btype2index(branch)), build or DYNBUILDNUM, branch
         try:
             btype, bname = branch.split('/')
         except ValueError:
             btype, bname = '', ''
-        assert bname not in ('master', 'support', 'hotfix', 'release', 'develop')
+        assert bname not in RESERVED
         if branch == 'master' or btype == 'support':
             return rawversion, masterbuild, masterlabel
         if build and btype in ('release', 'hotfix'):
             return '{}rc{}'.format(rawversion, build), masterbuild, btype
-        return '{}a{}'.format(rawversion, 1 + int(bool(btype)) + int(btype == 'feature')), \
+        bindex = btype2index(btype)
+        return '{}a{}'.format(rawversion, bindex), \
                build or DYNBUILDNUM, \
-               bname if btype == 'develop' else ''
+               bname if btype == 'develop' else (btype if bindex else '')
 
     tver, tbuild, tlab = calc()
     # Version normalization
