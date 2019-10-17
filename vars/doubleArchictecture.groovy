@@ -38,11 +38,16 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             echo "Activating NRT"
             condaShellCmd("activatenrt --doit", condaenvbuild)
           }
-          if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7"){
-            condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
-            archiveArtifacts('htmlcov/**')
-          } else {
-            condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
+          try {
+            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7"){
+              condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
+              archiveArtifacts('htmlcov/**')
+            } else {
+              condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
+            }
+          } catch (err) {
+            condaCleaner(true, condaenvbuild, condaenvb)
+            error "Failed UT"
           }
         }
       }
