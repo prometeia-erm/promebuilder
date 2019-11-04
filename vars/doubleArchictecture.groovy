@@ -46,7 +46,8 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
               condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
             }
           } catch (err) {
-            condaCleaner(true, condaenvbuild, condaenvb)
+            echo "Removing conda environment after error"
+            condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvbase)
             error "Failed UT"
           }
         }
