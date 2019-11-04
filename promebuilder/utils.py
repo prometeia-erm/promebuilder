@@ -38,7 +38,8 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         if branch == 'develop':
             return "{}a{}".format(rawversion, btype2index(branch)), build or DYNBUILDNUM, branch
         try:
-            btype, bname = branch.split('/')
+            char = '_' if branch.startswith('develop_') else '/'
+            btype, bname = branch.split(char)
         except ValueError:
             btype, bname = '', ''
         assert bname not in RESERVED
