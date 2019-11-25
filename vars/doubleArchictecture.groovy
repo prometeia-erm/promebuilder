@@ -37,7 +37,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             condaShellCmd("python setup.py develop", condaenvbuild)
           } catch (err) {
             echo "Removing conda environment after error"
-            condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvbase)
+            condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
             error "Failed SETUP for UT"
           }
           if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
@@ -53,7 +53,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             }
           } catch (err) {
             echo "Removing conda environment after error"
-            condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvbase)
+            condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
             error "Failed UT"
           }
         }

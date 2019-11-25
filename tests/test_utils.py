@@ -23,6 +23,10 @@ def test_gen_ver_build():
     assert ('1.2.3a4', 99, 'develop') == gen_ver_build('1.2.3', 'develop', 99)
     # Branch develop/XXX
     assert ('1.2.3a4', 99, 'refactor') == gen_ver_build('1.2.3', 'develop/refactor', 99)
+    # Branch develop_XXX
+    assert ('1.2.3a4', 99, 'refactor') == gen_ver_build('1.2.3', 'develop_refactor', 99)
+    # Branch develop-XXX are normal branch, no channel
+    assert ('1.2.3a0', 99, '') == gen_ver_build('1.2.3', 'develop-refactor', 99)
     # Branch feature/XXX
     assert ('1.2.3a2', 99, 'feature') == gen_ver_build('1.2.3', 'feature/h725', 99)
     # Branch backporting/XXX
