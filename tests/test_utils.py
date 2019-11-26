@@ -21,10 +21,8 @@ def test_gen_ver_build():
     assert ('1.2.3', 0, 'main') == gen_ver_build('1.2.3', 'support/XXX', 99)
     # Branch develop
     assert ('1.2.3a4', 99, 'develop') == gen_ver_build('1.2.3', 'develop', 99)
-    # Branch develop/XXX
-    assert ('1.2.3a4', 99, 'refactor') == gen_ver_build('1.2.3', 'develop/refactor', 99)
     # Branch develop_XXX
-    assert ('1.2.3a4', 99, 'refactor') == gen_ver_build('1.2.3', 'develop_refactor', 99)
+    assert ('1.2.3a5', 99, 'refactor') == gen_ver_build('1.2.3', 'develop_refactor', 99)
     # Branch develop-XXX are normal branch, no channel
     assert ('1.2.3a0', 99, '') == gen_ver_build('1.2.3', 'develop-refactor', 99)
     # Branch feature/XXX

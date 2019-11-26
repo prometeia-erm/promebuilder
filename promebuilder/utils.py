@@ -17,7 +17,8 @@ COVERAGEFILE = "htmlcov/index.html"
 DYNBUILDNUM = int(time.time() - 1514764800)
 LONGDESCFILE = "README.md"
 
-RESERVED = ('master', 'support', 'hotfix', 'release', 'develop', 'backporting', 'feature', 'test')
+FORKED = 'forked'
+RESERVED = ('master', 'support', 'hotfix', 'release', FORKED, 'develop', 'backporting', 'feature', 'test')
 
 
 def btype2index(btype):
@@ -38,8 +39,11 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         if branch == 'develop':
             return "{}a{}".format(rawversion, btype2index(branch)), build or DYNBUILDNUM, branch
         try:
-            char = '_' if branch.startswith('develop_') else '/'
-            btype, bname = branch.split(char)
+            if branch.startswith('develop_'):
+                btype = FORKED
+                bname = branch.split('_', 1)[1]
+            else:
+                btype, bname = branch.split("/")
         except ValueError:
             btype, bname = '', ''
         assert bname not in RESERVED
@@ -50,7 +54,7 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         bindex = btype2index(btype)
         return '{}a{}'.format(rawversion, bindex), \
                build or DYNBUILDNUM, \
-               bname if btype == 'develop' else (btype if bindex else '')
+               bname if btype == FORKED else (btype if bindex else '')
 
     tver, tbuild, tlab = calc()
     # Version normalization
