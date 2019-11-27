@@ -17,7 +17,12 @@ COVERAGEFILE = "htmlcov/index.html"
 DYNBUILDNUM = int(time.time() - 1514764800)
 LONGDESCFILE = "README.md"
 
-RESERVED = ('master', 'support', 'hotfix', 'release', 'develop', 'backporting', 'feature', 'test')
+FORKED = 'forked'
+RESERVED = ('master', 'support', 'hotfix', 'release', FORKED, 'develop', 'backporting', 'feature', 'test')
+
+
+def echo(msg):
+    print("[{}]".format(msg))
 
 
 def btype2index(btype):
@@ -26,6 +31,26 @@ def btype2index(btype):
         return orderer.index(btype)
     except ValueError:
         return 0
+
+
+def discover_git_branch():
+    headfilename = '.git/HEAD'
+    if not os.path.isfile(headfilename):
+        echo("Not a GIT repo")
+        return
+    with open(headfilename) as hfile:
+        lines = hfile.readlines()
+    if not lines or not lines[0]:
+        echo("Invalid GIT repo")
+        return
+    refs = lines[0].split(':', 1)[1].strip().split('/')
+    for mustbe in ('refs', 'heads'):
+        if refs.pop(0) != mustbe:
+            echo ("Invalid GIT HEAD config")
+            return
+    branch = '/'.join(refs)
+    echo("Discovered branch {}".format(branch))
+    return branch
 
 
 def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
@@ -38,7 +63,11 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         if branch == 'develop':
             return "{}a{}".format(rawversion, btype2index(branch)), build or DYNBUILDNUM, branch
         try:
-            btype, bname = branch.split('/')
+            if branch.startswith('develop_'):
+                btype = FORKED
+                bname = branch.split('_', 1)[1]
+            else:
+                btype, bname = branch.split("/")
         except ValueError:
             btype, bname = '', ''
         assert bname not in RESERVED
@@ -47,9 +76,17 @@ def gen_ver_build(rawversion, branch, build, masterlabel='main', masterbuild=0):
         if build and btype in ('release', 'hotfix'):
             return '{}rc{}'.format(rawversion, build), masterbuild, btype
         bindex = btype2index(btype)
-        return '{}a{}'.format(rawversion, bindex), \
-               build or DYNBUILDNUM, \
-               bname if btype == 'develop' else (btype if bindex else '')
+        if btype == FORKED:
+            return (
+                '{}a{}+{}'.format(rawversion, bindex, bname),
+                build or DYNBUILDNUM,
+                bname
+            )
+        return (
+            '{}a{}'.format(rawversion, bindex),
+            build or DYNBUILDNUM,
+            btype if bindex else ''
+        )
 
     tver, tbuild, tlab = calc()
     # Version normalization
@@ -71,11 +108,11 @@ def _readfiles(names, default=None):
                 if data:
                     return data
         except IOError:
-            print("[not found file %s]" % name)
+            echo("not found file %s" % name)
     if default is None:
         raise IOError("Missing or empty all of the files " + ', '.join(names))
     else:
-        print("[returning default '%s']" % default)
+        echo("returning default '%s'" % default)
     return default
 
 
@@ -86,9 +123,9 @@ def read_version():
 def has_coverage_report():
     hascoverage = os.path.isfile(COVERAGEFILE)
     if hascoverage:
-        print("[found a coverage report in %s]" % COVERAGEFILE)
+        echo("found a coverage report in %s" % COVERAGEFILE)
     else:
-        print("[no coverage was calculated]")
+        echo("no coverage was calculated")
     return hascoverage
 
 
@@ -96,16 +133,18 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
                  entry_points=None, package_data=None, data_files=None, zip_safe=False,
                  masterlabel='main', masterbuild=0):
     branch = _readfiles(BRANCHFILE, '')
+    if not branch:
+        branch = discover_git_branch() or ''
     version, buildnum, channel = gen_ver_build(read_version(), branch, int(_readfiles(BUILDNUMFILES, '0')),
                                                masterlabel, masterbuild)
-    print('Building version "%s" build "%d" from branch "%s" for channel "%s"' % (
+    echo('Building version "%s" build "%d" from branch "%s" for channel "%s"' % (
         version, buildnum, branch, channel or ''))
     with open(CHANNELFILE, 'w') as channelfile:
-        print("Writing channel '%s' on %s" % (channel, os.path.abspath(CHANNELFILE)))
+        echo("Writing channel '%s' on %s" % (channel, os.path.abspath(CHANNELFILE)))
         channelfile.write(channel)
 
     if 'bdist_conda' in sys.argv:
-        print("bdist_conda mode: requirements from file become setup requires")
+        echo("bdist_conda mode: requirements from file become setup requires")
         requires = _readfiles(REQUIREMENTSFILE, default="").splitlines()
     else:
         # Quando si installa in sviluppo, tanto al setup quanto all'esecuzione del wrapper viene verificato
@@ -149,10 +188,10 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
 
     try:
         import distutils.command.bdist_conda
-        print("Conda distribution")
+        echo("Conda distribution")
         docondatests = has_coverage_report()
         if not docondatests:
-            print("[skipping conda tests]")
+            echo("skipping conda tests")
         metadata.update(dict(
             distclass=distutils.command.bdist_conda.CondaDistribution,
             conda_import_tests=docondatests,
@@ -160,7 +199,7 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
             conda_buildnum=buildnum
         ))
     except ImportError:
-        print("Standard distribution")
+        echo("Standard distribution")
 
     return metadata
 
@@ -178,10 +217,10 @@ def setup(metadata):
                 setuptools.setup(**metadata)
             except CondaError as cerr:
                 if not tnum:
-                    print("-- TOO MANY CONDA ERROR--")
+                    echo("-- TOO MANY CONDA ERROR--")
                     raise
-                print("-- CONDA ERROR --")
-                print(str(cerr))
-                print("-- RETRY --")
+                echo("-- CONDA ERROR --")
+                echo(str(cerr))
+                echo("-- RETRY --")
             else:
                 break

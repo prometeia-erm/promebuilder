@@ -33,16 +33,28 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         if (! params?.skip_tests) {
           // Forced reinstall to avoid annoying wrong setuptools usage
           condaShellCmd("conda update -q setuptools --force", condaenvbuild)
-          condaShellCmd("python setup.py develop", condaenvbuild)
+          try {
+            condaShellCmd("python setup.py develop", condaenvbuild)
+          } catch (err) {
+            echo "Removing conda environment after error"
+            condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
+            error "Failed SETUP for UT"
+          }
           if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
             echo "Activating NRT"
             condaShellCmd("activatenrt --doit", condaenvbuild)
           }
-          if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7"){
-            condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
-            archiveArtifacts('htmlcov/**')
-          } else {
-            condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
+          try {
+            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7"){
+              condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
+              archiveArtifacts('htmlcov/**')
+            } else {
+              condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
+            }
+          } catch (err) {
+            echo "Removing conda environment after error"
+            condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
+            error "Failed UT"
           }
         }
       }
