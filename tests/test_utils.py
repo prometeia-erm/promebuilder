@@ -1,5 +1,9 @@
 import pytest
-from promebuilder.utils import gen_metadata, gen_ver_build
+from promebuilder.utils import gen_metadata, gen_ver_build, discover_git_branch
+
+
+def test_discover_git_branch():
+    discover_git_branch()
 
 
 def test_gen_metadata():
@@ -21,10 +25,17 @@ def test_gen_ver_build():
     assert ('1.2.3', 0, 'main') == gen_ver_build('1.2.3', 'support/XXX', 99)
     # Branch develop
     assert ('1.2.3a4', 99, 'develop') == gen_ver_build('1.2.3', 'develop', 99)
-    # Branch develop/XXX
-    assert ('1.2.3a2', 99, 'refactor') == gen_ver_build('1.2.3', 'develop/refactor', 99)
+    # Branch develop_XXX
+    assert ('1.2.3a5+refactor', 99, 'refactor') == gen_ver_build('1.2.3', 'develop_refactor', 99)
+    # Branch develop-XXX are normal branch, no channel
+    assert ('1.2.3a0', 99, '') == gen_ver_build('1.2.3', 'develop-refactor', 99)
     # Branch feature/XXX
-    assert ('1.2.3a3', 99, '') == gen_ver_build('1.2.3', 'feature/h725', 99)
+    assert ('1.2.3a2', 99, 'feature') == gen_ver_build('1.2.3', 'feature/h725', 99)
+    # Branch backporting/XXX
+    assert ('1.2.3a3', 99, 'backporting') == gen_ver_build('1.2.3', 'backporting/h725', 99)
+    # unknown branches
+    assert ('1.2.3a0', 99, '') == gen_ver_build('1.2.3', 'unknown/h725', 99)
+    assert ('1.2.3a0', 99, '') == gen_ver_build('1.2.3', 'unknown2', 99)
     # Branch release/XXX
     assert ('1.2.3rc99', 0, 'release') == gen_ver_build('1.2.3', 'release/ciccio', 99)
     # Branch hotfix/XXX
