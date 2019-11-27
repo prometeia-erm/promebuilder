@@ -1,5 +1,9 @@
 import pytest
-from promebuilder.utils import gen_metadata, gen_ver_build
+from promebuilder.utils import gen_metadata, gen_ver_build, discover_git_branch
+
+
+def test_discover_git_branch():
+    assert discover_git_branch()
 
 
 def test_gen_metadata():
@@ -22,7 +26,7 @@ def test_gen_ver_build():
     # Branch develop
     assert ('1.2.3a4', 99, 'develop') == gen_ver_build('1.2.3', 'develop', 99)
     # Branch develop_XXX
-    assert ('1.2.3a5', 99, 'refactor') == gen_ver_build('1.2.3', 'develop_refactor', 99)
+    assert ('1.2.3a5+refactor', 99, 'refactor') == gen_ver_build('1.2.3', 'develop_refactor', 99)
     # Branch develop-XXX are normal branch, no channel
     assert ('1.2.3a0', 99, '') == gen_ver_build('1.2.3', 'develop-refactor', 99)
     # Branch feature/XXX
