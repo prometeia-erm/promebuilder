@@ -3,7 +3,7 @@ from promebuilder.utils import gen_metadata, gen_ver_build, discover_git_branch
 
 
 def test_discover_git_branch():
-    assert discover_git_branch()
+    discover_git_branch()
 
 
 def test_gen_metadata():
