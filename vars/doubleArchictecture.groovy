@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV) {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="") {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
@@ -10,6 +10,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
         unstash "source"
         condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver}", condaenvb)
+        if (extrachannel) {
+          condaShellCmd("conda config --env --add channels ${extrachannel}", condaenvbuild)
+        }
         retry(3) {
           condaShellCmd("conda install --copy -q -y --file build-requirements.txt", condaenvbuild)
         }
@@ -79,6 +82,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
           echo "Creating indipendent test environment test_${condaenvbuild}"
           condaShellCmd("conda create -q -y -n test_${condaenvbuild} python=${pythonver}", condaenvb)
+          if (extrachannel) {
+            condaShellCmd("conda config --env --add channels ${extrachannel}", "test_${condaenvbuild}")
+          }
           if (readFile('channel')) {
             condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${condaenvbuild}")
           }

@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from subprocess import check_call
 from .utils import read_version
 
-COVERAGE_FILENAME = "sonar.python.coverage.reportPath"
+COVERAGE_FILENAME = "sonar.python.coverage.reportPaths"
 
 
 def read_config(filename="sonar-project.properties"):
