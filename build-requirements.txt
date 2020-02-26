@@ -1,4 +1,4 @@
-conda==4.6.*
+conda>=4.6
 conda-build==3.18.*
 pylint
 pytest==4.*
