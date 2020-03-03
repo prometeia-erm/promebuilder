@@ -11,11 +11,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         unstash "source"
         condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver}", condaenvb)
         if (extrachannel) {
-<<<<<<< HEAD
-          condaShellCmd("conda config --env --add channels ${extrachannel}", condaenvbuild)
-=======
           condaShellCmd("conda config --env --append channels ${extrachannel}", condaenvbuild)
->>>>>>> master
         }
         retry(3) {
           condaShellCmd("conda install --copy -q -y --file build-requirements.txt", condaenvbuild)
@@ -87,11 +83,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           echo "Creating indipendent test environment test_${condaenvbuild}"
           condaShellCmd("conda create -q -y -n test_${condaenvbuild} python=${pythonver}", condaenvb)
           if (extrachannel) {
-<<<<<<< HEAD
-            condaShellCmd("conda config --env --add channels ${extrachannel}", "test_${condaenvbuild}")
-=======
             condaShellCmd("conda config --env --append channels ${extrachannel}", "test_${condaenvbuild}")
->>>>>>> master
           }
           if (readFile('channel')) {
             condaShellCmd("conda config --env --add channels t/${env.ANACONDA_TOKEN}/prometeia/channel/" + readFile('channel'), "test_${condaenvbuild}")
