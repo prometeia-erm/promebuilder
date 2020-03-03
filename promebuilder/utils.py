@@ -131,7 +131,7 @@ def has_coverage_report():
 
 def gen_metadata(name, description, email, url="http://www.prometeia.com", keywords=None, packages=None,
                  entry_points=None, package_data=None, data_files=None, zip_safe=False,
-                 masterlabel='main', masterbuild=0):
+                 masterlabel='main', masterbuild=0, author="Prometeia"):
     branch = _readfiles(BRANCHFILE, '')
     if not branch:
         branch = discover_git_branch() or ''
@@ -157,9 +157,11 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
     metadata = dict(
         name=name,
         description=description,
-        author="Prometeia",
         url=url,
+        author=author,
         author_email=email,
+        maintainer=author,
+        maintainer_email=email,
         keywords=keywords or [],
         packages=sorted(packages or set(setuptools.find_packages()) - {'tests'}),
         license="Proprietary",
