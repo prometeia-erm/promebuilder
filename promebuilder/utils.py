@@ -43,7 +43,11 @@ def discover_git_branch():
     if not lines or not lines[0]:
         echo("Invalid GIT repo")
         return
-    refs = lines[0].split(':', 1)[1].strip().split('/')
+    try:
+        refs = lines[0].split(':', 1)[1].strip().split('/')
+    except IndexError:
+        echo("Not a GIT branch")
+        return
     for mustbe in ('refs', 'heads'):
         if refs.pop(0) != mustbe:
             echo ("Invalid GIT HEAD config")
