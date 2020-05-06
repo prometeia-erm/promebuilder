@@ -135,7 +135,7 @@ def has_coverage_report():
 
 def gen_metadata(name, description, email, url="http://www.prometeia.com", keywords=None, packages=None,
                  entry_points=None, package_data=None, data_files=None, zip_safe=False,
-                 masterlabel='main', masterbuild=0, author="Prometeia"):
+                 masterlabel='main', masterbuild=0, author="Prometeia", addpythonver=True):
     branch = _readfiles(BRANCHFILE, '')
     if not branch:
         branch = discover_git_branch() or ''
@@ -150,6 +150,10 @@ def gen_metadata(name, description, email, url="http://www.prometeia.com", keywo
     if 'bdist_conda' in sys.argv:
         echo("bdist_conda mode: requirements from file become setup requires")
         requires = _readfiles(REQUIREMENTSFILE, default="").splitlines()
+        pythominver = '.'.join(str(x) for x in sys.version_info[:2])
+        if addpythonver:
+            echo("Adding python version {}".format(pythominver))
+            requires.append('python=={}.*'.format(pythominver))
     else:
         # Quando si installa in sviluppo, tanto al setup quanto all'esecuzione del wrapper viene verificato
         # che i package indicati siano effettivamente presenti. I package sono però gli effettivi moduli,
