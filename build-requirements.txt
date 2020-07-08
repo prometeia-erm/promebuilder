@@ -4,6 +4,6 @@ pylint
 pytest==4.*
 pytest-cov==2.*
 conda-verify==3.*
-pytest-pylint
+pytest-pylint==0.14.*  # fixed for py2 compatibility
 setuptools>=40.6
-#pipenv
+libarchive
