@@ -7,3 +7,6 @@ Resources:
 - [Semantic Versioning](https://semver.org/)
 
 ![Prometeia Extended GitFlow](./giflow-full-pytho.svg)
+
+## Standard application
+
