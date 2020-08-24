@@ -98,7 +98,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
       stage('Upload') {
         if (readFile('channel')) {
           writeFile file: 'labels', text: " --label " + readFile('channel')
-          if (fileExists("htmlcov/index.html") ) {
+          if (fileExists("htmlcov/index.html")) {
             writeFile file: 'labels', text: " --label deeptested" + readFile('labels')
           }
           if (params?.force_upload) {
@@ -107,6 +107,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
           retry(3) {
             condaShellCmdNoLock("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
+          }
+          if (fileExists("dist/doc")) {
+            archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true)
           }
         }
       }
