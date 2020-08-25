@@ -108,9 +108,11 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           retry(3) {
             condaShellCmdNoLock("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
           }
-          if (fileExists("dist/doc")) {
-            archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true)
-          }
+        }
+      }
+      stage('ArchiveDoc') {
+        if (isUnix() && fileExists("dist/doc")) {
+          archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true, onlyIfSuccessful: true)
         }
       }
       stage('ConvertUpload32bit') {
