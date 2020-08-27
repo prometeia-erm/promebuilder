@@ -104,6 +104,8 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           if (params?.force_upload) {
             writeFile file: 'labels', text: " --force " + readFile('labels')
           }
+          echo "Archiving " + readFile('packagename')
+          archiveArtifacts(artifacts:readFile('packagename'))
           echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
           retry(3) {
             condaShellCmdNoLock("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
