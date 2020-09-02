@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="") {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true) {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
@@ -48,7 +48,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             condaShellCmd("activatenrt --doit", condaenvbuild)
           }
           try {
-            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7"){
+            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && scanme){
               condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
               archiveArtifacts('htmlcov/**')
             } else {
