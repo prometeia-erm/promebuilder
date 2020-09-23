@@ -47,10 +47,10 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             if ((env.GIT_BRANCH == 'master' || params?.test_markers == "") && isUnix() && scanme){
               condaShellCmdNoLock("pytest --cache-clear --cov-report html --cov-report xml --junitxml=junit.xml", condaenvbuild)
               archiveArtifacts('htmlcov/**')
-			  archiveArtifacts('junit.xml')
+			        archiveJunit 'junit.xml'
             } else {
               condaShellCmdNoLock("pytest --cache-clear --junitxml=junit.xml --no-cov -m '" + params?.test_markers + "'", condaenvbuild)
-              archiveArtifacts('junit.xml')
+              archiveJunit 'junit.xml'
             }
           } catch (err) {
             echo "Removing conda environment after error"
