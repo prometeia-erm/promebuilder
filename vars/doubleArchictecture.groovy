@@ -43,16 +43,14 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
             error "Failed SETUP for UT"
           }
-          if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
-            echo "Activating NRT"
-            condaShellCmd("activatenrt --doit", condaenvbuild)
-          }
           try {
-            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && scanme){
-              condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
+            if ((env.GIT_BRANCH == 'master' || params?.test_markers == "") && isUnix() && scanme){
+              condaShellCmdNoLock("pytest --cache-clear --cov-report html --cov-report xml --junitxml=junit.xml", condaenvbuild)
               archiveArtifacts('htmlcov/**')
+			  archiveArtifacts('junit.xml')
             } else {
-              condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
+              condaShellCmdNoLock("pytest --cache-clear --junitxml=junit.xml --no-cov -m '" + params?.test_markers + "'", condaenvbuild)
+              archiveArtifacts('junit.xml')
             }
           } catch (err) {
             echo "Removing conda environment after error"

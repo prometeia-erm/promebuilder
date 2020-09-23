@@ -122,6 +122,7 @@ build
 build_trigger_number
 win-*/
 linux-*/
+*.bak
 
 # Sonar
 .scannerwork/
