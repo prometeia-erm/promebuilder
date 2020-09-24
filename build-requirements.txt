@@ -1,11 +1,11 @@
 # last py2 compatibility
 conda==4.8.*
 conda-build==3.18.*
-pytest-pylint==0.17.*  # fixed for py2 compatibility
+pytest-pylint==0.17.*
+setuptools>=44
 # somewhat free
 pylint
 pytest==4.6.*
 pytest-cov==2.10.*
 conda-verify==3.*
-setuptools>=49
 libarchive
