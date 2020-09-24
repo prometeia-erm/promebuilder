@@ -55,6 +55,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           } catch (err) {
             echo "Removing conda environment after error"
             condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
+            archiveJunit 'junit.xml'
             error "Failed UT"
           }
         }
