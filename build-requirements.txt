@@ -1,7 +1,7 @@
 # last py2 compatibility
 conda==4.8.*
 conda-build==3.18.*
-pytest-pylint==0.17.*
+pytest-pylint==0.14.*
 setuptools>=44
 # somewhat free
 pylint
