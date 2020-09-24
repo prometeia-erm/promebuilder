@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="") {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true) {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
@@ -48,7 +48,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             condaShellCmd("activatenrt --doit", condaenvbuild)
           }
           try {
-            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7"){
+            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && scanme){
               condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
               archiveArtifacts('htmlcov/**')
             } else {
@@ -98,16 +98,23 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
       stage('Upload') {
         if (readFile('channel')) {
           writeFile file: 'labels', text: " --label " + readFile('channel')
-          if (fileExists("htmlcov/index.html") ) {
+          if (fileExists("htmlcov/index.html")) {
             writeFile file: 'labels', text: " --label deeptested" + readFile('labels')
           }
           if (params?.force_upload) {
             writeFile file: 'labels', text: " --force " + readFile('labels')
           }
+          // echo "Archiving " + readFile('packagename')
+          // archiveArtifacts(artifacts:readFile('packagename'))
           echo "Uploading " + readFile('packagename') + " with options:" + readFile('labels')
           retry(3) {
             condaShellCmdNoLock("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
           }
+        }
+      }
+      stage('ArchiveDoc') {
+        if (isUnix() && fileExists("dist/doc")) {
+          archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true, onlyIfSuccessful: true)
         }
       }
       stage('ConvertUpload32bit') {

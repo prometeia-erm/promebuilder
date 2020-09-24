@@ -1,4 +1,5 @@
-@Library('promebuilder')_
+@Library('promebuilder@pipeline')_
+
 
 pipeline {
   agent any
@@ -8,25 +9,25 @@ pipeline {
       defaultValue: false,
       description: 'Skip unit tests'
     )
-    booleanParam(
-      name: 'deep_tests',
-      defaultValue: false,
-      description: 'Do deep testing (regression, sonarqube, install, etc..)'
+    string(
+      name: 'test_markers',
+      defaultValue: "not slow",
+      description: 'Markers to run'
     )
     booleanParam(
       name: 'python3',
       defaultValue: true,
-      description: 'Building also for Pytho3'
+      description: 'Building also for Python3'
     )
     booleanParam(
       name: 'force_upload',
       defaultValue: false,
       description: 'Force Anaconda upload, overwriting the same build.'
     )
-    booleanParam(
-      name: 'keep_on_fail',
-      defaultValue: false,
-      description: 'Keep job environment on failed build.'
+    string(
+      name: 'failure_to',
+      defaultValue: "denib.brandolini@prometeia.com",
+      description: 'Failed build report'
     )
   }
   options {
@@ -54,17 +55,23 @@ pipeline {
       parallel {
         stage("Build on Linux - Legacy Python") {
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV)
+            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
           }
         }
         stage("Build on Windows - Legacy Python") {
+          when { expression { return env.GIT_BRANCH == 'master' || params.test_markers == ''} }
           steps {
             script {
               try {
-                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV)
+                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
               } catch (exc) {
                 echo 'Build failed on Windows Legacy Python'
-                currentBuild.result = 'UNSTABLE'
+                echo 'Current build result is' + currentBuild.result
+                if (!currentBuild.result || currentBuild.result == 'SUCCESS') {
+                  currentBuild.result = 'UNSTABLE'
+                } else (
+                  currentBuild.result = 'FAILED'
+                )
               }
             }
           }
@@ -72,13 +79,13 @@ pipeline {
         stage("Build on Linux - Python3") {
           when { expression { return params.python3 } }
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3)
+            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
           }
         }
         stage("Build on Windows - Python3") {
-          when { expression { return params.python3 } }
+          when { expression { return params.python3 && (env.GIT_BRANCH == 'master' || params.test_markers == '')} }
           steps {
-            doubleArchictecture('windows', 'base', true, PYVER3, CONDAENV3)
+            doubleArchictecture('windows', 'base', true, PYVER3, CONDAENV3, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
           }
         }
       }
@@ -88,11 +95,10 @@ pipeline {
     always {
       deleteDir()
     }
-    success {
-      slackSend color: "good", message: "Builded ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
-    }
     failure {
-      slackSend color: "warning", message: "Failed ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
+        emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}',
+                to: "${params.failure_to}",
+                subject: 'Failed ${env.JOB_NAME}'
     }
   }
 }
