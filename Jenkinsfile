@@ -55,7 +55,7 @@ pipeline {
       parallel {
         stage("Build on Linux - Legacy Python") {
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV)
+            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, "conda-forge")
           }
         }
         stage("Build on Windows - Legacy Python") {
@@ -63,7 +63,7 @@ pipeline {
           steps {
             script {
               try {
-                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV)
+                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV, "conda-forge")
               } catch (exc) {
                 echo 'Build failed on Windows Legacy Python'
                 echo 'Current build result is' + currentBuild.result
@@ -79,7 +79,7 @@ pipeline {
         stage("Build on Linux - Python3") {
           when { expression { return params.python3 } }
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3)
+            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, "conda-forge")
           }
         }
         stage("Build on Windows - Python3") {
