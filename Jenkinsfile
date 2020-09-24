@@ -39,7 +39,6 @@ pipeline {
     PYVER3 = "3.7"
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY2".replace('%2F','_').replace('/', '_')
     CONDAENV3 = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY3".replace('%2F','_').replace('/', '_')
-    EXTRACHANNEL = env.GIT_BRANCH == "develop" ? "conda-forge" : ""
   }
   stages {
     stage('Bootstrap') {
@@ -56,7 +55,7 @@ pipeline {
       parallel {
         stage("Build on Linux - Legacy Python") {
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, EXTRACHANNEL)
+            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
           }
         }
         stage("Build on Windows - Legacy Python") {
@@ -64,7 +63,7 @@ pipeline {
           steps {
             script {
               try {
-                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV, EXTRACHANNEL)
+                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
               } catch (exc) {
                 echo 'Build failed on Windows Legacy Python'
                 echo 'Current build result is' + currentBuild.result
@@ -80,13 +79,13 @@ pipeline {
         stage("Build on Linux - Python3") {
           when { expression { return params.python3 } }
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, EXTRACHANNEL)
+            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
           }
         }
         stage("Build on Windows - Python3") {
           when { expression { return params.python3 && (env.GIT_BRANCH == 'master' || params.test_markers == '')} }
           steps {
-            doubleArchictecture('windows', 'base', true, PYVER3, CONDAENV3, EXTRACHANNEL)
+            doubleArchictecture('windows', 'base', true, PYVER3, CONDAENV3, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
           }
         }
       }
@@ -98,7 +97,7 @@ pipeline {
     }
     failure {
         emailext body: 'Check console output at $BUILD_URL to view the results. \n\n ${CHANGES} \n\n -------------------------------------------------- \n${BUILD_LOG, maxLines=100, escapeHtml=false}',
-                to: "${EMAIL_TO}",
+                to: "${params.failure_to}",
                 subject: 'Failed ${env.JOB_NAME}'
     }
   }
