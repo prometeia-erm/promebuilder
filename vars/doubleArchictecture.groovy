@@ -49,7 +49,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
               archiveArtifacts('htmlcov/**')
               junit(allowEmptyResults: true, testResults: 'junit.xml')
             } else {
-              condaShellCmdNoLock("pytest --cache-clear --junitxml=junit.xml --no-cov -m '" + params?.test_markers + "'", condaenvbuild)
+              condaShellCmdNoLock('pytest --cache-clear --junitxml=junit.xml --no-cov -m "' + params?.test_markers + '"', condaenvbuild)
               junit(allowEmptyResults: true, testResults: 'junit.xml')
             }
           } catch (err) {
