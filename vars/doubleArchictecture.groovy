@@ -77,6 +77,12 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         echo "BUILD OUTPUT: \n\n ================ \n" + readFile('buildoutput') + "\n ================ \n"
         echo "PACKAGENAME: " + readFile('packagename')
       }
+      stage('ArchiveDoc') {
+        if (isUnix() && fileExists("dist/doc")) {
+          archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true, onlyIfSuccessful: true)
+          stash(name: "doc", useDefaultExcludes: true, includes: 'dist/doc/**')
+        }
+      }
       stage('Install') {
         if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
           echo "Creating indipendent test environment test_${condaenvbuild}"
@@ -109,11 +115,6 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           retry(3) {
             condaShellCmdNoLock("anaconda upload " + readFile('packagename') + readFile('labels'), condaenvb)
           }
-        }
-      }
-      stage('ArchiveDoc') {
-        if (isUnix() && fileExists("dist/doc")) {
-          archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true, onlyIfSuccessful: true)
         }
       }
       stage('ConvertUpload32bit') {
