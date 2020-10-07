@@ -15,6 +15,11 @@ pipeline {
       description: 'Markers to run'
     )
     booleanParam(
+      name: 'windows',
+      defaultValue: true,
+      description: 'Building also for Windows'
+    )    
+    booleanParam(
       name: 'python3',
       defaultValue: true,
       description: 'Building also for Python3'
@@ -48,6 +53,9 @@ pipeline {
         // env.GIT_BRANCH is wrong when the included library is the same project is builded!
         // writeFile file: 'branch', text: "${env.GIT_BRANCH}"
         writeFile file: 'branch', text: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
+        script {
+          env.GIT_BRANCH = readFile('branch')
+        }
         stash(name: "source", useDefaultExcludes: true)
       }
     }
@@ -59,7 +67,7 @@ pipeline {
           }
         }
         stage("Build on Windows - Legacy Python") {
-          when { expression { return env.GIT_BRANCH == 'master' || params.test_markers == ''} }
+          when { expression { return env.GIT_BRANCH == 'master' || params.test_markers == '' || params.windows } }
           steps {
             script {
               try {
@@ -83,7 +91,7 @@ pipeline {
           }
         }
         stage("Build on Windows - Python3") {
-          when { expression { return params.python3 && (env.GIT_BRANCH == 'master' || params.test_markers == '')} }
+          when { expression { return params.python3 && (env.GIT_BRANCH == 'master' || params.test_markers == '' || params.windows )} }
           steps {
             doubleArchictecture('windows', 'base', true, PYVER3, CONDAENV3, env.GIT_BRANCH == "develop" ? "conda-forge" : "")
           }
