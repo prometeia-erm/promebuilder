@@ -93,7 +93,7 @@ pipeline {
         stage("Build on Windows - Python3") {
           when { expression { return params.python3 && (env.GIT_BRANCH == 'master' || params.test_markers == '' || params.windows )} }
           steps {
-            doubleArchictecture('windows', 'base', false, PYVER3, CONDAENV3, env.GIT_BRANCH.startsWith("develop") ? "conda-forge" : "")
+            doubleArchictecture('windows', 'base', true, PYVER3, CONDAENV3, env.GIT_BRANCH.startsWith("develop") ? "conda-forge" : "")
           }
         }
       }
