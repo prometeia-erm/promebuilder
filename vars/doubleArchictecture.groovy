@@ -5,9 +5,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
     pipeline {
       stage('SetUp') {
         echo "Working on ${env.NODE_NAME}"
-        echo "Existing conda envs"
-        condaShellCmd("conda info --envs", condaenvb)
-        echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
+        cleanWs()
         if (isUnix()) {
           sh "ls -larth"
         }
@@ -16,6 +14,9 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           sh "ls -larth > _files.txt"
           archiveArtifacts('_files.txt')
         }
+        echo "Existing conda envs"
+        condaShellCmd("conda info --envs", condaenvb)
+        echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
         condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver}", condaenvb)
         if (extrachannel) {
           condaShellCmd("conda config --env --append channels ${extrachannel}", condaenvbuild)
