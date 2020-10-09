@@ -57,7 +57,7 @@ pipeline {
           } else {
             writeFile file: 'branch', text: bat(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
           }
-          env.GIT_BRANCH = readFile(branch)
+          env.GIT_BRANCH = readFile("branch")
         }
         stash(name: "source", useDefaultExcludes: true)
       }
