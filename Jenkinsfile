@@ -46,10 +46,12 @@ pipeline {
         writeFile file: 'commit', text: "${env.GIT_COMMIT}"
         // env.GIT_BRANCH is wrong when the included library is the same project is builded!
         // writeFile file: 'branch', text: "${env.GIT_BRANCH}"
-        if (isUnix()) {
-          writeFile file: 'branch', text: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
-        } else {
-          writeFile file: 'branch', text: bat(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
+        script {
+          if (isUnix()) {
+            writeFile file: 'branch', text: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
+          } else {
+            writeFile file: 'branch', text: bat(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).split(" ")[-1].trim()
+          }
         }
         stash(name: "source", useDefaultExcludes: true)
       }
