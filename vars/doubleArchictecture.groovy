@@ -11,8 +11,8 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
         unstash "source"
         if (isUnix()) {
-          sh "ls -larth > _files.txt"
-          archiveArtifacts('_files.txt')
+          sh "tree > files.txt"
+          archiveArtifacts('files.txt')
         }
         echo "Existing conda envs"
         condaShellCmd("conda info --envs", condaenvb)
