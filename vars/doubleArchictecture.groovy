@@ -8,7 +8,14 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         echo "Existing conda envs"
         condaShellCmd("conda info --envs", condaenvb)
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
+        if (isUnix()) {
+          sh "ls -larth"
+        }
         unstash "source"
+        if (isUnix()) {
+          sh "ls -larth > _files.txt"
+          archiveArtifacts('_files.txt')
+        }
         condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver}", condaenvb)
         if (extrachannel) {
           condaShellCmd("conda config --env --append channels ${extrachannel}", condaenvbuild)
