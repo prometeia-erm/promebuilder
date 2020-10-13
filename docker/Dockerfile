@@ -33,7 +33,7 @@ ENV CONDA_PREFIX=/home/conda/.conda/envs/${PBENV}
 ARG PACKAGENAME
 ENV PBPACKAGE=${PACKAGENAME}
 RUN basename ${PBPACKAGE} | cut -d "-" -f 2 > /home/conda/pbver.txt \
-  && echo /home/conda/pbver.txt
+  && cat /home/conda/pbver.txt
 RUN if [ -z $(cat /home/conda/pbver.txt) ] || [ -z ${PBPACKAGE} ]; then exit 1; fi
 COPY condarc.tmp /home/conda/.conda/envs/${PBENV}/.condarc
 RUN conda install -y -n ${PBENV} promebuilder=$(cat /home/conda/pbver.txt) \
