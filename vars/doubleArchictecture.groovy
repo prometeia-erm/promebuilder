@@ -69,7 +69,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7") {
+        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.test_markers == "") && isUnix() && pythonver == "2.7") {
           try   {
             condaShellCmdNoLock("sonar-scanner -D sonar.projectVersion=" + readFile('version') , condaenvbuild)
           } catch (err) {
@@ -92,7 +92,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
       }
       stage('Install') {
-        if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
+        if (env.GIT_BRANCH == 'master' || params?.test_markers == "") {
           echo "Creating indipendent test environment test_${condaenvbuild}"
           condaShellCmd("conda create -q -y -n test_${condaenvbuild} python=${pythonver}", condaenvb)
           if (extrachannel) {
@@ -125,6 +125,11 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           }
         }
       }
+      stage('Docker Build') {
+        if (isUnix() && fileExists("docker/Dockerfile") ) {
+          condaShellCmd("cd docker; source tmpcondarc.sh; docker build . --build-arg GSFPACKAGE=" + readFile('packagename'), condaenvb)
+        }
+      }      
       stage('ConvertUpload32bit') {
         if (convert32 && !isUnix() && readFile('channel')) {
           echo "Converting and Uploading package for win32"
