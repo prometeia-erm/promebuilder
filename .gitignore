@@ -129,3 +129,8 @@ linux-*/
 
 # ONLY ME - automatic
 requirements.txt
+
+
+# docker
+docker/*.tar.bz2
+docker/*.tmp

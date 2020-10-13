@@ -66,7 +66,7 @@ pipeline {
       parallel {
         stage("Build on Linux - Legacy Python") {
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, env.GIT_BRANCH.startsWith("develop") ? "conda-forge" : "")
+            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, env.GIT_BRANCH.startsWith("develop") ? "conda-forge" : "", true, false)
           }
         }
         stage("Build on Windows - Legacy Python") {
@@ -90,7 +90,7 @@ pipeline {
         stage("Build on Linux - Python3") {
           when { expression { return params.python3 } }
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, env.GIT_BRANCH.startsWith("develop") ? "conda-forge" : "")
+            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, env.GIT_BRANCH.startsWith("develop") ? "conda-forge" : "", false, true)
           }
         }
         stage("Build on Windows - Python3") {

@@ -1,0 +1,11 @@
+report_errors: false
+auto_update_conda: false
+unsatisfiable_hints: true
+restore_free_channel: false
+channel_priority: disabled
+env_prompt: ({default_env})
+default_channels:
+  - https://conda.anaconda.org/prometeia
+  - anaconda
+channels:
+  - defaults

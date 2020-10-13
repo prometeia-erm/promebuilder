@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true) {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true, docker=true) {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
@@ -126,7 +126,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         }
       }
       stage('Docker Build') {
-        if (isUnix() && fileExists("docker/Dockerfile") ) {
+        if (isUnix() && docker && fileExists("docker/Dockerfile") ) {
           writeFile file: 'dockerimage', text: env.DOCKER_REPO + "/" + env.JOB_NAME.replace("/", ":")
           condaShellCmd("cd docker; source tmpcondarc.sh; docker build . --build-arg GSFPACKAGE=" + readFile('packagename') 
                          + " --tag " + readFile('dockerimage'), condaenvb)
