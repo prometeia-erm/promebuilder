@@ -127,7 +127,10 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
       }
       stage('Docker Build') {
         if (isUnix() && fileExists("docker/Dockerfile") ) {
-          condaShellCmd("cd docker; source tmpcondarc.sh; docker build . --build-arg GSFPACKAGE=" + readFile('packagename'), condaenvb)
+          writefile file: 'dockerimage', text: env.DOCKER_REPO + "/" + env.JOB_NAME.replace("/", ":")
+          condaShellCmd("cd docker; source tmpcondarc.sh; docker build . --build-arg GSFPACKAGE=" + readFile('packagename') 
+                         + " --tag " + readFile('dockerimage'), condaenvb)
+          sh "docker push " + readFile('dockerimage')
         }
       }      
       stage('ConvertUpload32bit') {
