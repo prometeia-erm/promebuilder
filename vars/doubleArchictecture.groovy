@@ -1,14 +1,22 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true) {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true, docker=true) {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
         echo "Working on ${env.NODE_NAME}"
+        cleanWs()
+        if (isUnix()) {
+          sh "ls -larth"
+        }
+        unstash "source"
+        if (isUnix()) {
+          sh "tree > files.txt"
+          archiveArtifacts('files.txt')
+        }
         echo "Existing conda envs"
         condaShellCmd("conda info --envs", condaenvb)
         echo "Setup on ${envlabel}, conda environment ${condaenvbuild}"
-        unstash "source"
         condaShellCmd("conda create -q -y -n ${condaenvbuild} python=${pythonver}", condaenvb)
         if (extrachannel) {
           condaShellCmd("conda config --env --append channels ${extrachannel}", condaenvbuild)
@@ -43,26 +51,25 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
             error "Failed SETUP for UT"
           }
-          if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
-            echo "Activating NRT"
-            condaShellCmd("activatenrt --doit", condaenvbuild)
-          }
           try {
-            if ((env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && scanme){
-              condaShellCmdNoLock("pytest --cache-clear", condaenvbuild)
+            if ((env.GIT_BRANCH == 'master' || params?.test_markers == "") && isUnix() && scanme){
+              condaShellCmdNoLock("pytest --cache-clear --cov-report html --cov-report xml --junitxml=junit.xml", condaenvbuild)
               archiveArtifacts('htmlcov/**')
+              junit(allowEmptyResults: true, testResults: 'junit.xml')
             } else {
-              condaShellCmdNoLock("pytest --cache-clear --no-cov", condaenvbuild)
+              condaShellCmdNoLock('pytest --cache-clear --junitxml=junit.xml --no-cov -m "' + params?.test_markers + '"', condaenvbuild)
+              junit(allowEmptyResults: true, testResults: 'junit.xml')
             }
           } catch (err) {
             echo "Removing conda environment after error"
             condaShellCmd("conda env remove -y -n ${condaenvbuild}", condaenvb)
+            junit(allowEmptyResults: true, testResults: 'junit.xml')
             error "Failed UT"
           }
         }
       }
       stage('SonarScanner') {
-        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.deep_tests) && isUnix() && pythonver == "2.7") {
+        if (! params?.skip_tests && (env.GIT_BRANCH == 'master' || params?.test_markers == "") && isUnix() && pythonver == "2.7") {
           try   {
             condaShellCmdNoLock("sonar-scanner -D sonar.projectVersion=" + readFile('version') , condaenvbuild)
           } catch (err) {
@@ -78,8 +85,14 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
         echo "BUILD OUTPUT: \n\n ================ \n" + readFile('buildoutput') + "\n ================ \n"
         echo "PACKAGENAME: " + readFile('packagename')
       }
+      stage('ArchiveDoc') {
+        if (isUnix() && fileExists("dist/doc")) {
+          archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true, onlyIfSuccessful: true)
+          stash(name: "doc", useDefaultExcludes: true, includes: 'dist/doc/**')
+        }
+      }
       stage('Install') {
-        if (env.GIT_BRANCH == 'master' || params?.deep_tests) {
+        if (env.GIT_BRANCH == 'master' || params?.test_markers == "") {
           echo "Creating indipendent test environment test_${condaenvbuild}"
           condaShellCmd("conda create -q -y -n test_${condaenvbuild} python=${pythonver}", condaenvb)
           if (extrachannel) {
@@ -112,11 +125,17 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           }
         }
       }
-      stage('ArchiveDoc') {
-        if (isUnix() && fileExists("dist/doc")) {
-          archiveArtifacts(artifacts:'dist/doc/**', allowEmptyArchive:true, onlyIfSuccessful: true)
+      stage('Docker Build') {
+        if (docker && fileExists("docker/Dockerfile") && readFile('channel') && isUnix()) {
+          writeFile file: 'dockername', text: env.DOCKER_REPO + "/" + env.JOB_NAME.split("/")[0]
+          condaShellCmd("cd docker; sh tmpcondarc.sh; docker build . --build-arg PACKAGENAME=" + readFile('packagename') 
+                         + " --tag " + readFile('dockername'), condaenvbuild)          
+          sh "docker push " + readFile('dockername')
+          writeFile file: 'dockertag', text: readFile('dockername') + ':$(basename ' + readFile('packagename') + "| cut -d '-' -f 2)"
+          sh "docker tag " + readFile('dockertag')
+          sh "docker push " + readFile('dockertag')
         }
-      }
+      }      
       stage('ConvertUpload32bit') {
         if (convert32 && !isUnix() && readFile('channel')) {
           echo "Converting and Uploading package for win32"
