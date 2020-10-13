@@ -30,8 +30,8 @@ ENV CONDA_DEFAULT_ENV=${PBENV}
 ENV CONDA_PREFIX=/home/conda/.conda/envs/${PBENV}
 
 # Installing promebuilder
-ARG PBPACKAGE
-ENV PBPACKAGE=${PBPACKAGE}
+ARG PACKAGENAME
+ENV PBPACKAGE=${PACKAGENAME}
 RUN echo ${PBPACKAGE} | cut -d "-" -f 2 > /home/conda/pbver.txt
 RUN if [ -z $(cat /home/conda/pbver.txt) ] || [ -z ${PBPACKAGE} ]; then exit 1; fi
 COPY condarc.tmp /home/conda/.conda/envs/${PBENV}/.condarc
