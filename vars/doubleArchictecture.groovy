@@ -127,10 +127,13 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
       }
       stage('Docker Build') {
         if (docker && fileExists("docker/Dockerfile") && readFile('channel') && isUnix()) {
-          writeFile file: 'dockerimage', text: env.DOCKER_REPO + "/" + env.JOB_NAME.replace("/", ":")
+          writeFile file: 'dockername', text: env.DOCKER_REPO + "/" + env.JOB_NAME.split("/")[0]
           condaShellCmd("cd docker; sh tmpcondarc.sh; docker build . --build-arg PACKAGENAME=" + readFile('packagename') 
-                         + " --tag " + readFile('dockerimage'), condaenvbuild)
-          sh "docker push " + readFile('dockerimage')
+                         + " --tag " + readFile('dockername'), condaenvbuild)          
+          sh "docker push " + readFile('dockername')
+          writeFile file: 'dockertag', text: readFile('dockername') + ":$(basename " + readFile('packagename') + "| cut -d '-' -f 2)"
+          sh "docker tag " + readFile('dockertag')
+          sh "docker push " + readFile('dockertag')
         }
       }      
       stage('ConvertUpload32bit') {
