@@ -122,9 +122,15 @@ build
 build_trigger_number
 win-*/
 linux-*/
+*.bak
 
 # Sonar
 .scannerwork/
 
 # ONLY ME - automatic
 requirements.txt
+
+
+# docker
+docker/*.tar.bz2
+docker/*.tmp
