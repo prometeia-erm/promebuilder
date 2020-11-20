@@ -42,8 +42,10 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
       }
       stage('UnitTests') {
         if (! params?.skip_tests) {
-          // Forced reinstall to avoid annoying wrong setuptools usage
-          condaShellCmd("conda update -q setuptools --force", condaenvbuild)
+          if (env.REINSTALL_SETUPTOOLS == "1") {
+            // Forced reinstall to avoid annoying wrong setuptools usage
+            condaShellCmd("conda update -q setuptools --force", condaenvbuild)
+          }
           try {
             condaShellCmd("python setup.py develop", condaenvbuild)
           } catch (err) {
@@ -52,7 +54,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
             error "Failed SETUP for UT"
           }
           try {
-            if ((env.GIT_BRANCH == 'master' || params?.test_markers == "") && isUnix() && scanme){
+            if ((env.GIT_BRANCH == 'master' || params?.test_markers == "" || params?.test_markers == "not benchmark") && isUnix() && scanme){
               condaShellCmdNoLock("pytest --cache-clear --cov-report html --cov-report xml --junitxml=junit.xml", condaenvbuild)
               archiveArtifacts('htmlcov/**')
               junit(allowEmptyResults: true, testResults: 'junit.xml')
