@@ -55,7 +55,7 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
           }
           try {
             if ((env.GIT_BRANCH == 'master' || params?.test_markers == "" || params?.test_markers == "not benchmark") && isUnix() && scanme){
-              condaShellCmdNoLock("pytest --cache-clear --cov-report html --cov-report xml --junitxml=junit.xml", condaenvbuild)
+              condaShellCmdNoLock('pytest --cache-clear --cov-report html --cov-report xml --junitxml=junit.xml -m not benchmark', condaenvbuild)
               archiveArtifacts('htmlcov/**')
               junit(allowEmptyResults: true, testResults: 'junit.xml')
             } else {
