@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true, docker=true) {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true, docker=false) {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
