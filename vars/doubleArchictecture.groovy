@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true, docker=true) {
+def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvbuild=CONDAENV, extrachannel="", scanme=true, docker=false) {
   node(envlabel) {
     pipeline {
       stage('SetUp') {
@@ -128,14 +128,14 @@ def call(envlabel, condaenvb="base", convert32=false, pythonver="2.7", condaenvb
       stage('Docker Build') {
         if (docker && fileExists("docker/Dockerfile") && readFile('channel') && isUnix()) {
           writeFile file: 'dockername', text: env.DOCKER_REPO + "/" + env.JOB_NAME.split("/")[0]
-          condaShellCmd("cd docker; sh tmpcondarc.sh; docker build . --build-arg PACKAGENAME=" + readFile('packagename') 
-                         + " --tag " + readFile('dockername'), condaenvbuild)          
+          condaShellCmd("cd docker; sh tmpcondarc.sh; docker build . --build-arg PACKAGENAME=" + readFile('packagename')
+                         + " --tag " + readFile('dockername'), condaenvbuild)
           sh "docker push " + readFile('dockername')
           writeFile file: 'dockertag', text: readFile('dockername') + ':$(basename ' + readFile('packagename') + "| cut -d '-' -f 2)"
           sh "docker tag " + readFile('dockertag')
           sh "docker push " + readFile('dockertag')
         }
-      }      
+      }
       stage('ConvertUpload32bit') {
         if (convert32 && !isUnix() && readFile('channel')) {
           echo "Converting and Uploading package for win32"
